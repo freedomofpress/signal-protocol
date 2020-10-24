@@ -1,0 +1,33 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run:
+          name: Install dev dependencies and install
+          command: |
+            virtualenv --python python3 .venv
+            source .venv/bin/activate
+            pip install -r requirements.txt
+            python setup.py install
+  build:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run:
+          name: Build wheels.
+          command: |
+            virtualenv --python python3 .venv
+            source .venv/bin/activate
+            pip install -r requirements.txt
+            python setup.py build
+
+workflows:
+  version: 2
+  jobs_per_pr:
+    jobs:
+      - test
+      - build

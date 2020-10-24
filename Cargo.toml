@@ -1,0 +1,13 @@
+[package]
+name = "signal-protocol"
+version = "0.1.0"
+authors = ["jen <jen@freedom.press>"]
+edition = "2018"
+
+[dependencies]
+hello_world = { path = "hello_world" }
+pyo3 = { version = "0.12.1", features = ["extension-module"] }
+
+[lib]
+name = "signal_protocol"
+crate-type = ["cdylib"]
