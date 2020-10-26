@@ -16,12 +16,6 @@ You can use this as either a library in Python projects, e.g.:
 import signal_protocol
 ```
 
-A standalone CLI is also provided. This package provides the same interface as AsamK's signal-cli project:
-
-```sh
-$ signal-cli
-```
-
 ## Developer Getting Started
 
 You will need both Rust ([how to install Rust](https://rustup.rs/)) and Python 3 installed on your system. To install the project in your virtualenv:
