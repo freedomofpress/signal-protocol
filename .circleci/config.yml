@@ -10,13 +10,14 @@ jobs:
           command: |
             curl https://sh.rustup.rs -sSf | sh -s -- -y
       - run:
-          name: Install dev dependencies and install
+          name: Install dependencies and run tests
           command: |
             source $HOME/.cargo/env
             virtualenv --python python3 .venv
             source .venv/bin/activate
             pip install -r requirements.txt
             python setup.py install
+            pytest -v tests/
 
   build:
     docker:

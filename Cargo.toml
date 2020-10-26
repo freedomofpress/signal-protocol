@@ -5,7 +5,8 @@ authors = ["jen <jen@freedom.press>"]
 edition = "2018"
 
 [dependencies]
-hello_world = { path = "hello_world" }
+rand = "0.7.3"
+libsignal-protocol-rust = { git = "https://github.com/redshiftzero/libsignal-protocol-rust" }
 pyo3 = { version = "0.12.1", features = ["extension-module"] }
 
 [lib]

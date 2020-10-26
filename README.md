@@ -27,5 +27,11 @@ $ signal-cli
 You will need both Rust ([how to install Rust](https://rustup.rs/)) and Python 3 installed on your system. To install the project in your virtualenv:
 
 ```
-python setup.py install
+python setup.py develop
+```
+
+To view the docs locally:
+
+```
+cargo doc --open
 ```
