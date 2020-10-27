@@ -2,6 +2,7 @@
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
+mod address;
 mod curve;
 
 /// Signal Protocol in Python
@@ -11,10 +12,14 @@ mod curve;
 ///
 /// Basic usage:
 ///
-/// >>> pub, priv = signal_protocol.generate_keypair()
+/// >>> pub, priv = signal_protocol.curve.generate_keypair()
 ///
 #[pymodule]
 fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
+    let address_submod = PyModule::new(py, "address")?;
+    address::init_submodule(address_submod)?;
+    module.add_submodule(address_submod)?;
+
     let curve_submod = PyModule::new(py, "curve")?;
     curve::init_curve_submodule(curve_submod)?;
     module.add_submodule(curve_submod)?;

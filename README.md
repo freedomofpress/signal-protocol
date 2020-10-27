@@ -4,6 +4,8 @@ Rust extension providing a Python module for the signal protocol
 
 WARNING: This is an experimental project and should be used at your own risk. It is using Signal's [`libsignal-protocol-rust`](https://github.com/signalapp/libsignal-protocol-rust) which is still documented as a work in progress.
 
+See [here](https://cryptography.io/en/latest/limitations.html) for a fundamental limitation storing secrets in Python-allocated memory.
+
 ## Installation
 
 ```
@@ -28,7 +30,7 @@ You will need both [Rust](https://rustup.rs/) and Python 3 installed on your sys
 python setup.py develop
 ```
 
-Then run the tests via `pytest -v tests/` to confirm all is working as expected.
+Then run the tests via `pytest -v tests/` to confirm all is working.
 
 To view the docs locally:
 
