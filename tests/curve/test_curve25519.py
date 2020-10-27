@@ -28,5 +28,5 @@ def test_keypair_agreement_x25519():
                 b"0x9a", b"0x9c", b"0x38", b"0x06", b"0xc1", b"0xdd", b"0x7c", b"0xa4", b"0xc4", b"0x77",
                 b"0xe6", b"0x29"]
 
-    test = curve.SignalKeyPair()
+    test = curve.KeyPair()
     pass
