@@ -20,8 +20,8 @@ pub fn generate_keypair() -> PyResult<(Vec<u8>, Vec<u8>)> {
 /// calculate_agreement
 #[pyclass]
 pub struct KeyPair {
-    public_key: libsignal_protocol_rust::PublicKey,
-    private_key: libsignal_protocol_rust::PrivateKey,
+    pub public_key: PublicKey,
+    pub private_key: PrivateKey,
 }
 
 #[pymethods]
@@ -33,8 +33,8 @@ impl KeyPair {
         let mut csprng = OsRng;
         let keypair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
         KeyPair {
-            public_key: keypair.public_key,
-            private_key: keypair.private_key,
+            public_key: PublicKey{ key: keypair.public_key } ,
+            private_key: PrivateKey{ key: keypair.private_key },
         }
     }
 
@@ -42,10 +42,39 @@ impl KeyPair {
     fn generate() -> Self {
         Self::new()
     }
+
+    fn public_key(&self) -> PyResult<Vec<u8>> {
+        let key_data = self.public_key.key.serialize();
+        Ok(key_data.to_vec())
+    }
+}
+
+#[pyclass]
+pub struct PublicKey {
+    key: libsignal_protocol_rust::PublicKey,
+}
+
+impl PublicKey {
+    fn new(key: libsignal_protocol_rust::PublicKey) -> Self {
+        PublicKey { key }
+    }
+}
+
+#[pyclass]
+pub struct PrivateKey {
+    key: libsignal_protocol_rust::PrivateKey,
+}
+
+impl PrivateKey {
+    fn new(key: libsignal_protocol_rust::PrivateKey) -> Self {
+        PrivateKey { key }
+    }
 }
 
 pub fn init_curve_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<KeyPair>()?;
+    module.add_class::<PublicKey>()?;
+    module.add_class::<PrivateKey>()?;
     module.add_wrapped(wrap_pyfunction!(generate_keypair))?;
     Ok(())
 }

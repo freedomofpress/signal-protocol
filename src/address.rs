@@ -15,8 +15,8 @@ pub struct ProtocolAddress {
 #[pymethods]
 impl ProtocolAddress {
     #[new]
-    fn new(name: String, device_id: u32) -> PyResult<(ProtocolAddress)> {
-        Ok(ProtocolAddress{name, device_id})
+    fn new(name: String, device_id: u32) -> ProtocolAddress {
+       ProtocolAddress{name, device_id}
     }
 }
 
