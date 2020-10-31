@@ -31,10 +31,10 @@ impl InMemSignalProtocolStore {
         Ok(IdentityKeyPair{ key: result })
     }
 
-    // TO FIGURE OUT: Exceptions
-    // fn get_local_registration_id(&self) -> PyResult<u32> {
-    //     Ok(self.store.identity_store.get_local_registration_id(None)?)
-    // }
+    /// TO FIGURE OUT: Exceptions!!
+    fn get_local_registration_id(&self) -> PyResult<u32> {
+        Ok(self.store.identity_store.get_local_registration_id(None).unwrap())
+    }
 
     // fn save_identity(
     //     &mut self,

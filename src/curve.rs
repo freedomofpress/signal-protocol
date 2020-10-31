@@ -60,8 +60,9 @@ impl KeyPair {
 }
 
 #[pyclass]
+#[derive(Debug, Clone, Copy)]
 pub struct PublicKey {
-    key: libsignal_protocol_rust::PublicKey,
+    pub key: libsignal_protocol_rust::PublicKey,
 }
 
 impl PublicKey {
@@ -83,6 +84,7 @@ impl PublicKey {
 }
 
 #[pyclass]
+#[derive(Clone, Copy)]
 pub struct PrivateKey {
     key: libsignal_protocol_rust::PrivateKey,
 }

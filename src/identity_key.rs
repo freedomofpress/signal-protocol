@@ -13,6 +13,7 @@ use crate::curve::{PublicKey,PrivateKey};
 
 
 #[pyclass]
+#[derive(Debug, Clone, Copy)]
 pub struct IdentityKey {
     pub key: libsignal_protocol_rust::IdentityKey,
 }
@@ -37,6 +38,7 @@ impl IdentityKey {
 }
 
 #[pyclass]
+#[derive(Clone, Copy)]
 pub struct IdentityKeyPair {
     pub key: libsignal_protocol_rust::IdentityKeyPair,
 }
@@ -60,6 +62,11 @@ impl IdentityKeyPair {
         Ok(IdentityKeyPair{key: key_pair})
     }
 
+    pub fn identity_key(&self, py: Python) -> PyResult<IdentityKey> {
+        let identity_key = IdentityKey::new(&self.key.public_key().serialize()).unwrap();
+        Ok(identity_key)
+    }
+
     pub fn public_key(&self, py: Python) -> PyResult<PublicKey> {
         let public_key = PublicKey::deserialize(&self.key.public_key().serialize()).unwrap();
         Ok(public_key)
@@ -70,10 +77,12 @@ impl IdentityKeyPair {
         Ok(private_key)
     }
 
+    // Redundant? maybe remove
     pub fn serialize_private_key(&self, py: Python) -> PyResult<PyObject> {
         Ok(PyBytes::new(py, &self.key.private_key().serialize()).into())
     }
 
+    // Redundant? maybe remove
     pub fn serialize_public_key(&self, py: Python) -> PyResult<PyObject> {
         Ok(PyBytes::new(py, &self.key.public_key().serialize()).into())
     }

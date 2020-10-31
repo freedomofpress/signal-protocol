@@ -5,6 +5,7 @@ use pyo3::wrap_pyfunction;
 mod address;
 mod curve;
 mod identity_key;
+mod state;
 mod storage;
 
 /// Signal Protocol in Python
@@ -29,6 +30,10 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let identity_key_submod = PyModule::new(py, "identity_key")?;
     identity_key::init_submodule(identity_key_submod)?;
     module.add_submodule(identity_key_submod)?;
+
+    let state_submod = PyModule::new(py, "state")?;
+    state::init_submodule(state_submod)?;
+    module.add_submodule(state_submod)?;
 
     let storage_submod = PyModule::new(py, "storage")?;
     storage::init_submodule(storage_submod)?;
