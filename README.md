@@ -15,7 +15,10 @@ If you want to build from source, you'll need [Rust](https://rustup.rs/) install
 Generating a long-term identity key, a registration ID, and prekeys:
 
 ```py
-import signal_protocol
+from signal_protocol import curve, identity_key
+
+identity_key_pair = identity_key.IdentityKeyPair.generate()
+pre_key_pair = curve.KeyPair.generate()
 ```
 
 ## Developer Getting Started

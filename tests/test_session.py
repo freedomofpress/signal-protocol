@@ -4,7 +4,6 @@ DEVICE_ID = 1
 
 
 def test_basic_prekey_v3():
-    """Ported to Python from upstream crate"""
     alice_address = address.ProtocolAddress("+14151111111", DEVICE_ID)
     bob_address = address.ProtocolAddress("+14151111112", DEVICE_ID)
 
@@ -14,20 +13,17 @@ def test_basic_prekey_v3():
     alice_registration_id = 1 #TODO: generate these
     bob_registration_id = 2
 
-    alice_store = storage.InMemSignalProtocolStoreWrapper(alice_identity_key_pair, alice_registration_id)
-    bob_store = storage.InMemSignalProtocolStoreWrapper(bob_identity_key_pair, bob_registration_id)
+    alice_store = storage.InMemSignalProtocolStore(alice_identity_key_pair, alice_registration_id)
+    bob_store = storage.InMemSignalProtocolStore(bob_identity_key_pair, bob_registration_id)
 
     bob_pre_key_pair = curve.KeyPair.generate()
     bob_signed_pre_key_pair = curve.KeyPair.generate()
 
-    # We don't need to call serialize() on the public key, as the return
-    # value of public_key is already a Vec<u8>
-    bob_signed_pre_key_public = bob_signed_pre_key_pair.public_key()
+    bob_signed_pre_key_public = bob_signed_pre_key_pair.public_key().serialize()
 
-    # let bob_signed_pre_key_signature = bob_store
-    #     .get_identity_key_pair(None)?
-    #     .private_key()
-    #     .calculate_signature(&bob_signed_pre_key_public, &mut csprng)?;
+    bob_signed_pre_key_signature = bob_store.get_identity_key_pair() \
+                                            .private_key() \
+                                            .calculate_signature(bob_signed_pre_key_public)
 
     pre_key_id = 31337
     signed_pre_key_id = 22
