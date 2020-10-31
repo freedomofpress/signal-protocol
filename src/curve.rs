@@ -49,6 +49,11 @@ impl KeyPair {
         Ok(public_key)
     }
 
+    pub fn private_key(&self, py: Python) -> PyResult<PrivateKey> {
+        let private_key = PrivateKey::deserialize(&self.private_key.key.serialize()).unwrap();
+        Ok(private_key)
+    }
+
     pub fn serialize(&self, py: Python) -> PyResult<PyObject> {
         Ok(PyBytes::new(py, &self.public_key.key.serialize()).into())
     }
@@ -102,10 +107,17 @@ impl PrivateKey {
     }
 }
 
+#[pyfunction]
+pub fn verify_signature(public_key: &PublicKey, message: &[u8], signature: &[u8]) -> PyResult<bool> {
+    let libsig_public_key = libsignal_protocol_rust::PublicKey::deserialize(&public_key.key.serialize()).unwrap();
+    Ok(libsig_public_key.verify_signature(message, signature).unwrap())
+}
+
 pub fn init_curve_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<KeyPair>()?;
     module.add_class::<PublicKey>()?;
     module.add_class::<PrivateKey>()?;
     module.add_wrapped(wrap_pyfunction!(generate_keypair))?;
+    module.add_wrapped(wrap_pyfunction!(verify_signature))?;
     Ok(())
 }
