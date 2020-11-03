@@ -3,9 +3,13 @@ use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
 
+use crate::address::ProtocolAddress;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
+use crate::session::SessionRecord;
+
 use libsignal_protocol_rust;
-use libsignal_protocol_rust::IdentityKeyStore;
+// traits
+use libsignal_protocol_rust::{SessionStore, IdentityKeyStore};
 
 #[pyclass]
 pub struct InMemSignalProtocolStore {
@@ -69,6 +73,30 @@ impl InMemSignalProtocolStore {
 
     // fn get_identity(&self, address: &ProtocolAddress, ctx: Context) -> Result<Option<IdentityKey>> {
     //     self.identity_store.get_identity(address, ctx)
+    // }
+}
+
+/// libsignal_protocol_rust::SessionStore
+#[pymethods]
+impl InMemSignalProtocolStore {
+    pub fn load_session(
+        &self,
+        address: &ProtocolAddress,
+    ) -> PyResult<Option<SessionRecord>> {
+
+        match self.store.load_session(&address.state, None).unwrap() {
+            None => Ok(None),
+            Some(session) => Ok(Some(SessionRecord{state: session}))
+            }
+    }
+
+    // fn store_session(
+    //     &mut self,
+    //     address: &ProtocolAddress,
+    //     record: &SessionRecord,
+    //     ctx: Context,
+    // ) -> Result<()> {
+    //     self.session_store.store_session(address, record, ctx)
     // }
 }
 

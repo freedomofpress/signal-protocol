@@ -11,6 +11,22 @@ use crate::address::ProtocolAddress;
 use crate::state::PreKeyBundle;
 use crate::storage::InMemSignalProtocolStore;
 
+
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct SessionRecord {
+    pub state: libsignal_protocol_rust::SessionRecord
+}
+
+#[pymethods]
+impl SessionRecord {
+    #[staticmethod]
+    pub fn new_fresh() -> Self {
+        SessionRecord{ state: libsignal_protocol_rust::SessionRecord::new_fresh()}
+    }
+}
+
+
 #[pyfunction]
 pub fn process_prekey_bundle(
     remote_address: ProtocolAddress,
@@ -31,6 +47,7 @@ pub fn process_prekey_bundle(
 }
 
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
+    module.add_class::<SessionRecord>()?;
     module.add_wrapped(wrap_pyfunction!(process_prekey_bundle))?;
     Ok(())
 }

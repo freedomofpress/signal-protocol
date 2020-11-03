@@ -39,13 +39,16 @@ def test_basic_prekey_v3():
         bob_store.get_identity_key_pair().identity_key(),
     )
 
+    assert alice_store.load_session(bob_address) is None
+
     session.process_prekey_bundle(
         bob_address,
         alice_store,
         bob_pre_key_bundle,
     )
 
-    #     assert!(alice_store.load_session(&bob_address, None)?.is_some());
+    assert alice_store.load_session(bob_address)
+
     #     assert_eq!(
     #         alice_store
     #             .load_session(&bob_address, None)?
