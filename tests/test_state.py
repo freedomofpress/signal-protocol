@@ -27,7 +27,6 @@ def test_define_prekey_bundle_under_prekey_exhaustion():
     pre_key_id = 31337
     signed_pre_key_id = 22
 
-    # The below works
     bob_pre_key_bundle = state.PreKeyBundle(
         bob_store.get_local_registration_id(),
         DEVICE_ID,

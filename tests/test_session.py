@@ -48,15 +48,7 @@ def test_basic_prekey_v3():
     )
 
     assert alice_store.load_session(bob_address)
-
-    #     assert_eq!(
-    #         alice_store
-    #             .load_session(&bob_address, None)?
-    #             .unwrap()
-    #             .session_state()?
-    #             .session_version()?,
-    #         3
-    #     );
+    assert alice_store.load_session(bob_address).session_version() == 3
 
     original_message = "L'homme est condamné à être libre";
 

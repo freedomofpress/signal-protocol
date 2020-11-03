@@ -3,6 +3,7 @@ use pyo3::wrap_pyfunction;
 
 mod address;
 mod curve;
+mod error;
 mod identity_key;
 mod session;
 mod state;
@@ -26,6 +27,10 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let curve_submod = PyModule::new(py, "curve")?;
     curve::init_curve_submodule(curve_submod)?;
     module.add_submodule(curve_submod)?;
+
+    let error_submod = PyModule::new(py, "error")?;
+    error::init_submodule(py, error_submod)?;
+    module.add_submodule(error_submod)?;
 
     let identity_key_submod = PyModule::new(py, "identity_key")?;
     identity_key::init_submodule(identity_key_submod)?;
