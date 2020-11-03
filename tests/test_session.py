@@ -1,4 +1,4 @@
-from signal_protocol import curve, address, identity_key, state, storage
+from signal_protocol import curve, address, identity_key, session, state, storage
 
 DEVICE_ID = 1
 
@@ -39,14 +39,11 @@ def test_basic_prekey_v3():
         bob_store.get_identity_key_pair().identity_key(),
     )
 
-    #     process_prekey_bundle(
-    #         &bob_address,
-    #         &mut alice_store.session_store,
-    #         &mut alice_store.identity_store,
-    #         &bob_pre_key_bundle,
-    #         &mut csprng,
-    #         None,
-    #     )?;
+    session.process_prekey_bundle(
+        bob_address,
+        alice_store,
+        bob_pre_key_bundle,
+    )
 
     #     assert!(alice_store.load_session(&bob_address, None)?.is_some());
     #     assert_eq!(

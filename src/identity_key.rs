@@ -1,16 +1,15 @@
 use std::convert::TryFrom;
 
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
-use pyo3::types::PyBytes;
 use pyo3::pyclass::PyClassAlloc;
+use pyo3::types::PyBytes;
+use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
 
 use libsignal_protocol_rust;
 
-use crate::curve::{PublicKey,PrivateKey};
-
+use crate::curve::{PrivateKey, PublicKey};
 
 #[pyclass]
 #[derive(Debug, Clone, Copy)]
@@ -24,7 +23,9 @@ impl IdentityKey {
     // by the new() function.
     #[new]
     pub fn new(public_key: &[u8]) -> PyResult<Self> {
-        Ok(Self { key: libsignal_protocol_rust::IdentityKey::try_from(public_key).unwrap() })
+        Ok(Self {
+            key: libsignal_protocol_rust::IdentityKey::try_from(public_key).unwrap(),
+        })
     }
 
     pub fn public_key(&self, py: Python) -> PyResult<PublicKey> {
@@ -43,23 +44,21 @@ pub struct IdentityKeyPair {
     pub key: libsignal_protocol_rust::IdentityKeyPair,
 }
 
-/// ## Note on comparison with upstream crate:
-///
-/// There is no identity_key method exposed, but one can extract the public
-/// key and private key objects via the public_key() and public_key() methods
-/// respectively, or the serialized identity key pair via serialize().
 #[pymethods]
 impl IdentityKeyPair {
     #[new]
     pub fn new(identity_key_pair_bytes: &[u8]) -> PyResult<Self> {
-        Ok( Self{ key: libsignal_protocol_rust::IdentityKeyPair::try_from(identity_key_pair_bytes).unwrap() } )
+        Ok(Self {
+            key: libsignal_protocol_rust::IdentityKeyPair::try_from(identity_key_pair_bytes)
+                .unwrap(),
+        })
     }
 
     #[staticmethod]
     pub fn generate() -> PyResult<Self> {
         let mut csprng = OsRng;
         let key_pair = libsignal_protocol_rust::IdentityKeyPair::generate(&mut csprng);
-        Ok(IdentityKeyPair{key: key_pair})
+        Ok(IdentityKeyPair { key: key_pair })
     }
 
     pub fn identity_key(&self, py: Python) -> PyResult<IdentityKey> {

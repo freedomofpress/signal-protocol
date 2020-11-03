@@ -11,11 +11,12 @@ pub fn generate_keypair() -> PyResult<(Vec<u8>, Vec<u8>)> {
     let mut csprng = OsRng;
     let key_pair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
 
-    Ok((key_pair.public_key.serialize().to_vec(), key_pair.private_key.serialize().to_vec()))
+    Ok((
+        key_pair.public_key.serialize().to_vec(),
+        key_pair.private_key.serialize().to_vec(),
+    ))
 }
 
-/// SignalKeyPair is a wrapper for KeyPair
-///
 /// Methods from libsignal-protocol-rust not implemented:
 /// new (passing in keys), from_public_and_private, calculate_signature,
 /// calculate_agreement
@@ -34,8 +35,12 @@ impl KeyPair {
         let mut csprng = OsRng;
         let keypair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
         KeyPair {
-            public_key: PublicKey{ key: keypair.public_key } ,
-            private_key: PrivateKey{ key: keypair.private_key },
+            public_key: PublicKey {
+                key: keypair.public_key,
+            },
+            private_key: PrivateKey {
+                key: keypair.private_key,
+            },
         }
     }
 
@@ -75,7 +80,9 @@ impl PublicKey {
 impl PublicKey {
     #[staticmethod]
     pub fn deserialize(key: &[u8]) -> PyResult<Self> {
-        Ok(Self{ key: libsignal_protocol_rust::PublicKey::deserialize(key).unwrap() })
+        Ok(Self {
+            key: libsignal_protocol_rust::PublicKey::deserialize(key).unwrap(),
+        })
     }
 
     pub fn serialize(&self, py: Python) -> PyResult<PyObject> {
@@ -99,7 +106,9 @@ impl PrivateKey {
 impl PrivateKey {
     #[staticmethod]
     pub fn deserialize(key: &[u8]) -> PyResult<Self> {
-        Ok(Self{ key: libsignal_protocol_rust::PrivateKey::deserialize(key).unwrap() })
+        Ok(Self {
+            key: libsignal_protocol_rust::PrivateKey::deserialize(key).unwrap(),
+        })
     }
 
     pub fn calculate_signature(&self, message: &[u8], py: Python) -> PyResult<PyObject> {
@@ -110,9 +119,16 @@ impl PrivateKey {
 }
 
 #[pyfunction]
-pub fn verify_signature(public_key: &PublicKey, message: &[u8], signature: &[u8]) -> PyResult<bool> {
-    let libsig_public_key = libsignal_protocol_rust::PublicKey::deserialize(&public_key.key.serialize()).unwrap();
-    Ok(libsig_public_key.verify_signature(message, signature).unwrap())
+pub fn verify_signature(
+    public_key: &PublicKey,
+    message: &[u8],
+    signature: &[u8],
+) -> PyResult<bool> {
+    let libsig_public_key =
+        libsignal_protocol_rust::PublicKey::deserialize(&public_key.key.serialize()).unwrap();
+    Ok(libsig_public_key
+        .verify_signature(message, signature)
+        .unwrap())
 }
 
 pub fn init_curve_submodule(module: &PyModule) -> PyResult<()> {

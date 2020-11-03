@@ -7,18 +7,21 @@ use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use libsignal_protocol_rust;
 use libsignal_protocol_rust::IdentityKeyStore;
 
-
 #[pyclass]
 pub struct InMemSignalProtocolStore {
-    pub store: libsignal_protocol_rust::InMemSignalProtocolStore
+    pub store: libsignal_protocol_rust::InMemSignalProtocolStore,
 }
 
 #[pymethods]
 impl InMemSignalProtocolStore {
     #[new]
     fn new(key_pair: &IdentityKeyPair, registration_id: u32) -> PyResult<InMemSignalProtocolStore> {
-        Ok(Self{
-            store: libsignal_protocol_rust::InMemSignalProtocolStore::new(key_pair.key, registration_id).unwrap(),
+        Ok(Self {
+            store: libsignal_protocol_rust::InMemSignalProtocolStore::new(
+                key_pair.key,
+                registration_id,
+            )
+            .unwrap(),
         })
     }
 }
@@ -27,13 +30,21 @@ impl InMemSignalProtocolStore {
 #[pymethods]
 impl InMemSignalProtocolStore {
     fn get_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
-        let result = self.store.identity_store.get_identity_key_pair(None).unwrap();
-        Ok(IdentityKeyPair{ key: result })
+        let result = self
+            .store
+            .identity_store
+            .get_identity_key_pair(None)
+            .unwrap();
+        Ok(IdentityKeyPair { key: result })
     }
 
     /// TO FIGURE OUT: Exceptions!!
     fn get_local_registration_id(&self) -> PyResult<u32> {
-        Ok(self.store.identity_store.get_local_registration_id(None).unwrap())
+        Ok(self
+            .store
+            .identity_store
+            .get_local_registration_id(None)
+            .unwrap())
     }
 
     // fn save_identity(

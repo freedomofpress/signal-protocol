@@ -1,10 +1,10 @@
-
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
 mod address;
 mod curve;
 mod identity_key;
+mod session;
 mod state;
 mod storage;
 
@@ -30,6 +30,10 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let identity_key_submod = PyModule::new(py, "identity_key")?;
     identity_key::init_submodule(identity_key_submod)?;
     module.add_submodule(identity_key_submod)?;
+
+    let session_submod = PyModule::new(py, "session")?;
+    session::init_submodule(session_submod)?;
+    module.add_submodule(session_submod)?;
 
     let state_submod = PyModule::new(py, "state")?;
     state::init_submodule(state_submod)?;
