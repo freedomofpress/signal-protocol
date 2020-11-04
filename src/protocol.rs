@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use pyo3::prelude::*;
 use pyo3::pyclass::PyClassAlloc;
 use pyo3::types::PyBytes;
@@ -40,8 +42,21 @@ impl CiphertextMessage {
     }
 }
 
+#[pyclass]
+pub struct PreKeySignalMessage {
+    pub data: libsignal_protocol_rust::PreKeySignalMessage
+}
+
+#[pymethods]
+impl PreKeySignalMessage {
+    #[staticmethod]
+    pub fn try_from(data: &[u8]) -> PyResult<Self> {
+        Ok(PreKeySignalMessage{ data: libsignal_protocol_rust::PreKeySignalMessage::try_from(data).unwrap() })
+    }
+}
 
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<CiphertextMessage>()?;
+    module.add_class::<PreKeySignalMessage>()?;
     Ok(())
 }

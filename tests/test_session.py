@@ -1,4 +1,4 @@
-from signal_protocol import curve, address, identity_key, session, session_cipher, state, storage
+from signal_protocol import curve, address, identity_key, protocol, session, session_cipher, state, storage
 
 DEVICE_ID = 1
 
@@ -54,14 +54,11 @@ def test_basic_prekey_v3():
 
     outgoing_message = session_cipher.encrypt(alice_store, bob_address, original_message)
     outgoing_message.message_type() == 3  # 3 means PreKey
+    outgoing_message_wire = outgoing_message.serialize()
 
     # Now over to fake Bob for processing the first message
 
-
-
-#     let incoming_message = CiphertextMessage::PreKeySignalMessage(PreKeySignalMessage::try_from(
-#         outgoing_message.serialize(),
-#     )?);
+    incoming_message = protocol.PreKeySignalMessage.try_from(outgoing_message_wire)
 
 #     bob_store.save_pre_key(
 #         pre_key_id,
