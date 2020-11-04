@@ -7,11 +7,11 @@ use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::session::SessionRecord;
-use crate::state::{PreKeyId,PreKeyRecord};
+use crate::state::{PreKeyId,PreKeyRecord,SignedPreKeyRecord,SignedPreKeyId};
 
 use libsignal_protocol_rust;
 // traits
-use libsignal_protocol_rust::{SessionStore, IdentityKeyStore, PreKeyStore};
+use libsignal_protocol_rust::{SessionStore, IdentityKeyStore, PreKeyStore, SignedPreKeyStore};
 
 #[pyclass]
 pub struct InMemSignalProtocolStore {
@@ -44,7 +44,6 @@ impl InMemSignalProtocolStore {
         Ok(IdentityKeyPair { key: result })
     }
 
-    /// TO FIGURE OUT: Exceptions!!
     fn get_local_registration_id(&self) -> PyResult<u32> {
         Ok(self
             .store
@@ -120,6 +119,30 @@ impl InMemSignalProtocolStore {
     //     self.pre_key_store.remove_pre_key(id, ctx)
     // }
 }
+
+/// libsignal_protocol_rust::SignedPreKeyStore
+#[pymethods]
+impl InMemSignalProtocolStore {
+    // fn get_signed_pre_key(&self, id: SignedPreKeyId, _ctx: Context) -> Result<SignedPreKeyRecord> {
+    //     Ok(self
+    //         .signed_pre_keys
+    //         .get(&id)
+    //         .ok_or(SignalProtocolError::InvalidSignedPreKeyId)?
+    //         .clone())
+    // }
+
+    fn save_signed_pre_key(
+        &mut self,
+        id: SignedPreKeyId,
+        record: &SignedPreKeyRecord,
+    ) -> PyResult<()> {
+        match self.store.save_signed_pre_key(id, &record.state.to_owned(), None) {
+            Ok(_result)  => Ok(()),
+            Err(_e) => Err(SignalProtocolError::new_err("could not save signed prekey"))
+        }
+    }
+}
+
 
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<InMemSignalProtocolStore>()?;

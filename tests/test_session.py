@@ -70,11 +70,7 @@ def test_basic_prekey_v3():
             bob_signed_pre_key_signature,
         )
 
-#     bob_store.save_signed_pre_key(
-#         signed_pre_key_id,
-#         signed_prekey,
-#         None,
-#     )?;
+    bob_store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 
 #     let ptext = decrypt(&mut bob_store, &alice_address, &incoming_message)?;
 

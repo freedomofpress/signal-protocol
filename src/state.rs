@@ -6,6 +6,7 @@ use libsignal_protocol_rust;
 use crate::curve::{PublicKey, KeyPair};
 use crate::identity_key::IdentityKey;
 
+// Newtypes from upstream crate not exposed as part of the public API
 pub type SignedPreKeyId = u32;
 pub type PreKeyId = u32;
 
@@ -28,13 +29,11 @@ impl PreKeyBundle {
         signed_pre_key_signature: Vec<u8>,
         identity_key: IdentityKey,
     ) -> PyResult<Self> {
-        let pre_key: std::option::Option<libsignal_protocol_rust::PublicKey>;
 
-        if pre_key_public.is_some() {
-            pre_key = std::option::Option::Some(pre_key_public.unwrap().key);
-        } else {
-            pre_key = std::option::Option::None;
-        }
+        let pre_key: std::option::Option<libsignal_protocol_rust::PublicKey> = match pre_key_public {
+            Some(inner)  => Some(inner.key),
+            None => None
+        };
 
         let signed_pre_key = signed_pre_key_public.key;
         let identity_key_direct = identity_key.key;
