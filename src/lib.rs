@@ -5,7 +5,9 @@ mod address;
 mod curve;
 mod error;
 mod identity_key;
+mod protocol;
 mod session;
+mod session_cipher;
 mod state;
 mod storage;
 
@@ -35,6 +37,14 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let identity_key_submod = PyModule::new(py, "identity_key")?;
     identity_key::init_submodule(identity_key_submod)?;
     module.add_submodule(identity_key_submod)?;
+
+    let protocol_submod = PyModule::new(py, "protocol")?;
+    protocol::init_submodule(protocol_submod)?;
+    module.add_submodule(protocol_submod)?;
+
+    let session_cipher_submod = PyModule::new(py, "session_cipher")?;
+    session_cipher::init_submodule(session_cipher_submod)?;
+    module.add_submodule(session_cipher_submod)?;
 
     let session_submod = PyModule::new(py, "session")?;
     session::init_submodule(session_submod)?;

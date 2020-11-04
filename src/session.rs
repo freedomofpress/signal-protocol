@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use pyo3::pyclass::PyClassAlloc;
-use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 use pyo3::exceptions;
 
