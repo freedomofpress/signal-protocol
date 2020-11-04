@@ -93,7 +93,7 @@ impl PublicKey {
 #[pyclass]
 #[derive(Clone, Copy)]
 pub struct PrivateKey {
-    key: libsignal_protocol_rust::PrivateKey,
+    pub key: libsignal_protocol_rust::PrivateKey,
 }
 
 impl PrivateKey {

@@ -3,7 +3,7 @@ use pyo3::wrap_pyfunction;
 
 use libsignal_protocol_rust;
 
-use crate::curve::PublicKey;
+use crate::curve::{PublicKey, KeyPair};
 use crate::identity_key::IdentityKey;
 
 pub type SignedPreKeyId = u32;
@@ -55,7 +55,30 @@ impl PreKeyBundle {
     }
 }
 
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct PreKeyRecord {
+    pub state: libsignal_protocol_rust::PreKeyRecord,
+}
+
+// impl PreKeyRecord {
+//     fn new(state: libsignal_protocol_rust::PreKeyRecord) -> Self {
+//         PreKeyRecord { state }
+//     }
+// }
+
+#[pymethods]
+impl PreKeyRecord {
+    #[new]
+    fn new(id: PreKeyId, key: &KeyPair) -> Self {
+        let key = libsignal_protocol_rust::KeyPair::new(key.public_key.key, key.private_key.key);
+        PreKeyRecord { state: libsignal_protocol_rust::PreKeyRecord::new(id, &key) }
+    }
+}
+
+
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<PreKeyBundle>()?;
+    module.add_class::<PreKeyRecord>()?;
     Ok(())
 }

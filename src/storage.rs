@@ -4,12 +4,14 @@ use pyo3::wrap_pyfunction;
 use rand::rngs::OsRng;
 
 use crate::address::ProtocolAddress;
+use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::session::SessionRecord;
+use crate::state::{PreKeyId,PreKeyRecord};
 
 use libsignal_protocol_rust;
 // traits
-use libsignal_protocol_rust::{SessionStore, IdentityKeyStore};
+use libsignal_protocol_rust::{SessionStore, IdentityKeyStore, PreKeyStore};
 
 #[pyclass]
 pub struct InMemSignalProtocolStore {
@@ -97,6 +99,25 @@ impl InMemSignalProtocolStore {
     //     ctx: Context,
     // ) -> Result<()> {
     //     self.session_store.store_session(address, record, ctx)
+    // }
+}
+
+/// libsignal_protocol_rust::PreKeyStore
+#[pymethods]
+impl InMemSignalProtocolStore {
+    // fn get_pre_key(&self, id: PreKeyId, ctx: Context) -> Result<PreKeyRecord> {
+    //     self.pre_key_store.get_pre_key(id, ctx)
+    // }
+
+    fn save_pre_key(&mut self, id: PreKeyId, record: &PreKeyRecord) -> PyResult<()> {
+        match self.store.pre_key_store.save_pre_key(id, &record.state, None) {
+            Ok(result)  => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error"))
+        }
+    }
+
+    // fn remove_pre_key(&mut self, id: PreKeyId, ctx: Context) -> Result<()> {
+    //     self.pre_key_store.remove_pre_key(id, ctx)
     // }
 }
 

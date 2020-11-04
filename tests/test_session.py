@@ -60,11 +60,9 @@ def test_basic_prekey_v3():
 
     incoming_message = protocol.PreKeySignalMessage.try_from(outgoing_message_wire)
 
-#     bob_store.save_pre_key(
-#         pre_key_id,
-#         &PreKeyRecord::new(pre_key_id, &bob_pre_key_pair),
-#         None,
-#     )?;
+    bob_prekey = state.PreKeyRecord(pre_key_id, bob_pre_key_pair)
+    bob_store.save_pre_key(pre_key_id, bob_prekey)
+
 #     bob_store.save_signed_pre_key(
 #         signed_pre_key_id,
 #         &SignedPreKeyRecord::new(
