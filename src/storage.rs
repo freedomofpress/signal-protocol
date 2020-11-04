@@ -143,7 +143,6 @@ impl InMemSignalProtocolStore {
     }
 }
 
-
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<InMemSignalProtocolStore>()?;
     Ok(())
