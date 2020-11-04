@@ -61,12 +61,6 @@ pub struct PreKeyRecord {
     pub state: libsignal_protocol_rust::PreKeyRecord,
 }
 
-// impl PreKeyRecord {
-//     fn new(state: libsignal_protocol_rust::PreKeyRecord) -> Self {
-//         PreKeyRecord { state }
-//     }
-// }
-
 #[pymethods]
 impl PreKeyRecord {
     #[new]
@@ -76,9 +70,24 @@ impl PreKeyRecord {
     }
 }
 
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct SignedPreKeyRecord {
+    pub state: libsignal_protocol_rust::SignedPreKeyRecord,
+}
+
+#[pymethods]
+impl SignedPreKeyRecord {
+    #[new]
+    fn new(id: SignedPreKeyId, timestamp: u64, key: &KeyPair, signature: &[u8]) -> Self {
+        let key = libsignal_protocol_rust::KeyPair::new(key.public_key.key, key.private_key.key);
+        SignedPreKeyRecord { state: libsignal_protocol_rust::SignedPreKeyRecord::new(id, timestamp, &key, &signature) }
+    }
+}
 
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<PreKeyBundle>()?;
     module.add_class::<PreKeyRecord>()?;
+    module.add_class::<SignedPreKeyRecord>()?;
     Ok(())
 }

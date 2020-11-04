@@ -63,14 +63,16 @@ def test_basic_prekey_v3():
     bob_prekey = state.PreKeyRecord(pre_key_id, bob_pre_key_pair)
     bob_store.save_pre_key(pre_key_id, bob_prekey)
 
+    signed_prekey = state.SignedPreKeyRecord(
+            signed_pre_key_id,
+            42,
+            bob_signed_pre_key_pair,
+            bob_signed_pre_key_signature,
+        )
+
 #     bob_store.save_signed_pre_key(
 #         signed_pre_key_id,
-#         &SignedPreKeyRecord::new(
-#             signed_pre_key_id,
-#             /*timestamp*/ 42,
-#             &bob_signed_pre_key_pair,
-#             &bob_signed_pre_key_signature,
-#         ),
+#         signed_prekey,
 #         None,
 #     )?;
 
