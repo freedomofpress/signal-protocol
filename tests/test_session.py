@@ -1,4 +1,6 @@
-from signal_protocol import curve, address, identity_key, protocol, session, session_cipher, state, storage
+import pytest
+
+from signal_protocol import curve, address, error, identity_key, protocol, session, session_cipher, state, storage
 
 DEVICE_ID = 1
 
@@ -95,102 +97,81 @@ def test_basic_prekey_v3():
     alice_decrypts = session_cipher.message_decrypt(alice_store, bob_address, bob_outgoing)
     assert alice_decrypts.decode('utf8') == bobs_response
 
-#     run_interaction(
-#         &mut alice_store,
-#         &alice_address,
-#         &mut bob_store,
-#         &bob_address,
-#     )?;
+    #     run_interaction(
+    #         &mut alice_store,
+    #         &alice_address,
+    #         &mut bob_store,
+    #         &bob_address,
+    #     )?;
 
-#     let mut alice_store = support::test_in_memory_protocol_store();
+    alice_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    alice_registration_id = 1 #TODO: generate these
+    alice_store = storage.InMemSignalProtocolStore(alice_identity_key_pair, alice_registration_id)
 
-#     let bob_pre_key_pair = KeyPair::generate(&mut csprng);
-#     let bob_signed_pre_key_pair = KeyPair::generate(&mut csprng);
+    bob_pre_key_pair = curve.KeyPair.generate()
+    bob_signed_pre_key_pair = curve.KeyPair.generate()
+    bob_signed_pre_key_public = bob_signed_pre_key_pair.public_key().serialize()
 
-#     let bob_signed_pre_key_public = bob_signed_pre_key_pair.public_key.serialize();
-#     let bob_signed_pre_key_signature = bob_store
-#         .get_identity_key_pair(None)?
-#         .private_key()
-#         .calculate_signature(&bob_signed_pre_key_public, &mut csprng)?;
+    bob_signed_pre_key_signature = bob_store.get_identity_key_pair() \
+                                            .private_key() \
+                                            .calculate_signature(bob_signed_pre_key_public)
 
-#     let pre_key_id = 31337;
-#     let signed_pre_key_id = 22;
+    pre_key_id = 31337
+    signed_pre_key_id = 22
 
-#     let bob_pre_key_bundle = PreKeyBundle::new(
-#         bob_store.get_local_registration_id(None)?,
-#         1, // device id
-#         Some(pre_key_id + 1),
-#         Some(bob_pre_key_pair.public_key), // pre key
-#         signed_pre_key_id + 1,
-#         bob_signed_pre_key_pair.public_key,
-#         bob_signed_pre_key_signature.to_vec(),
-#         *bob_store.get_identity_key_pair(None)?.identity_key(),
-#     )?;
+    bob_pre_key_bundle = state.PreKeyBundle(
+        bob_store.get_local_registration_id(),
+        DEVICE_ID,
+        pre_key_id + 1,
+        bob_pre_key_pair.public_key(),
+        signed_pre_key_id + 1,
+        bob_signed_pre_key_pair.public_key(),
+        bob_signed_pre_key_signature,
+        bob_store.get_identity_key_pair().identity_key(),
+    )
 
-#     bob_store.save_pre_key(
-#         pre_key_id + 1,
-#         &PreKeyRecord::new(pre_key_id + 1, &bob_pre_key_pair),
-#         None,
-#     )?;
-#     bob_store.save_signed_pre_key(
-#         signed_pre_key_id + 1,
-#         &SignedPreKeyRecord::new(
-#             signed_pre_key_id + 1,
-#             /*timestamp*/ 42,
-#             &bob_signed_pre_key_pair,
-#             &bob_signed_pre_key_signature,
-#         ),
-#         None,
-#     )?;
+    bob_prekey = state.PreKeyRecord(pre_key_id + 1, bob_pre_key_pair)
+    bob_store.save_pre_key(pre_key_id + 1, bob_prekey)
 
-#     process_prekey_bundle(
-#         &bob_address,
-#         &mut alice_store.session_store,
-#         &mut alice_store.identity_store,
-#         &bob_pre_key_bundle,
-#         &mut csprng,
-#         None,
-#     )?;
+    signed_prekey = state.SignedPreKeyRecord(
+            signed_pre_key_id + 1,
+            42,
+            bob_signed_pre_key_pair,
+            bob_signed_pre_key_signature,
+    )
+    bob_store.save_signed_pre_key(signed_pre_key_id + 1, signed_prekey)
 
-#     let outgoing_message = encrypt(&mut alice_store, &bob_address, original_message)?;
+    session.process_prekey_bundle(
+        bob_address,
+        alice_store,
+        bob_pre_key_bundle,
+    )
 
-#     assert_eq!(
-#         decrypt(&mut bob_store, &alice_address, &outgoing_message).unwrap_err(),
-#         SignalProtocolError::UntrustedIdentity(alice_address.clone())
-#     );
+    outgoing_message = session_cipher.message_encrypt(alice_store, bob_address, original_message)
 
-#     assert_eq!(
-#         bob_store.save_identity(
-#             &alice_address,
-#             alice_store.get_identity_key_pair(None)?.identity_key(),
-#             None,
-#         )?,
-#         true
-#     );
+    # TODO: Add to this assert the reason for failure: SignalProtocolError::UntrustedIdentity(alice_address.clone())
+    with pytest.raises(error.SignalProtocolError):
+        session_cipher.message_decrypt(bob_store, alice_address, outgoing_message)
 
-#     let decrypted = decrypt(&mut bob_store, &alice_address, &outgoing_message)?;
-#     assert_eq!(String::from_utf8(decrypted).unwrap(), original_message);
+    assert bob_store.save_identity(alice_address, alice_store.get_identity_key_pair().identity_key())
 
-#     // Sign pre-key with wrong key:
-#     let bob_pre_key_bundle = PreKeyBundle::new(
-#         bob_store.get_local_registration_id(None)?,
-#         1, // device id
-#         Some(pre_key_id),
-#         Some(bob_pre_key_pair.public_key), // pre key
-#         signed_pre_key_id,
-#         bob_signed_pre_key_pair.public_key,
-#         bob_signed_pre_key_signature.to_vec(),
-#         *alice_store.get_identity_key_pair(None)?.identity_key(),
-#     )?;
+    decrypted = session_cipher.message_decrypt(bob_store, alice_address, outgoing_message)
+    assert decrypted.decode('utf8') == original_message
 
-#     assert!(process_prekey_bundle(
-#         &bob_address,
-#         &mut alice_store.session_store,
-#         &mut alice_store.identity_store,
-#         &bob_pre_key_bundle,
-#         &mut csprng,
-#         None,
-#     )
-#     .is_err());
+    # Sign pre-key with wrong key
+    bob_pre_key_bundle = state.PreKeyBundle(
+        bob_store.get_local_registration_id(),
+        DEVICE_ID,
+        pre_key_id,
+        bob_pre_key_pair.public_key(),
+        signed_pre_key_id,
+        bob_signed_pre_key_pair.public_key(),
+        bob_signed_pre_key_signature,
+        alice_store.get_identity_key_pair().identity_key(),
+    )
 
-#     Ok(())
+    with pytest.raises(error.SignalProtocolError):
+        session.process_prekey_bundle(
+            bob_address,
+            alice_store,
+            bob_pre_key_bundle)

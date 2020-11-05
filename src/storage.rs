@@ -52,14 +52,14 @@ impl InMemSignalProtocolStore {
             .unwrap())
     }
 
-    // fn save_identity(
-    //     &mut self,
-    //     address: &ProtocolAddress,
-    //     identity: &IdentityKey,
-    //     ctx: Context,
-    // ) -> Result<bool> {
-    //     self.identity_store.save_identity(address, identity, ctx)
-    // }
+    fn save_identity(
+        &mut self,
+        address: &ProtocolAddress,
+        identity: &IdentityKey,
+    ) -> PyResult<bool> {
+
+        Ok(self.store.identity_store.save_identity(&address.state, &identity.key, None).unwrap())
+    }
 
     // fn is_trusted_identity(
     //     &self,

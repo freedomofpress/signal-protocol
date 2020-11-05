@@ -69,16 +69,19 @@ pub fn process_prekey_bundle(
     bundle: PreKeyBundle,
 ) -> PyResult<()> {
     let mut csprng = OsRng;
-
-    Ok(libsignal_protocol_rust::process_prekey_bundle(
+    let result = libsignal_protocol_rust::process_prekey_bundle(
         &remote_address.state,
         &mut protocol_store.store.session_store,
         &mut protocol_store.store.identity_store,
         &bundle.state,
         &mut csprng,
         None,
-    )
-    .unwrap())
+    );
+
+    match result {
+        Ok(())  => Ok(()),
+        Err(_e) => Err(SignalProtocolError::new_err("error processing prekey bundle"))
+    }
 }
 
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
