@@ -47,11 +47,19 @@ pub struct PreKeySignalMessage {
     pub data: libsignal_protocol_rust::PreKeySignalMessage
 }
 
+/// Rust enums cannot be mapped to Python enums in PyO3. This means
+/// that here PreKeySignalMessage is not a subtype of CiphertextMessage.
+/// This means if we try to use PreKeySignalMessage in e.g.
+/// session_cipher::message_decrypt, we'll get a type error as those methods
+/// require CiphertextMessage.
+///
+/// We handle this by having the try_from constructor on PreKeySignalMessage
+/// actually create a CiphertextMessage under the hood. (TODO: better solution here?)
 #[pymethods]
 impl PreKeySignalMessage {
     #[staticmethod]
-    pub fn try_from(data: &[u8]) -> PyResult<Self> {
-        Ok(PreKeySignalMessage{ data: libsignal_protocol_rust::PreKeySignalMessage::try_from(data).unwrap() })
+    pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
+        Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::PreKeySignalMessage(libsignal_protocol_rust::PreKeySignalMessage::try_from(data).unwrap()) })
     }
 }
 

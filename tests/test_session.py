@@ -41,6 +41,7 @@ def test_basic_prekey_v3():
 
     assert alice_store.load_session(bob_address) is None
 
+    # Below standalone function would make more sense as a method on alice_store?
     session.process_prekey_bundle(
         bob_address,
         alice_store,
@@ -52,7 +53,7 @@ def test_basic_prekey_v3():
 
     original_message = "Hobgoblins hold themselves to high standards of military honor"
 
-    outgoing_message = session_cipher.encrypt(alice_store, bob_address, original_message)
+    outgoing_message = session_cipher.message_encrypt(alice_store, bob_address, original_message)
     outgoing_message.message_type() == 3  # 3 means PreKey
     outgoing_message_wire = outgoing_message.serialize()
 
@@ -72,9 +73,9 @@ def test_basic_prekey_v3():
 
     bob_store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 
-#     let ptext = decrypt(&mut bob_store, &alice_address, &incoming_message)?;
+    plaintext = session_cipher.message_decrypt(bob_store, alice_address, incoming_message)
 
-#     assert_eq!(String::from_utf8(ptext).unwrap(), original_message);
+    assert original_message == plaintext.decode('utf8')
 
 #     let bobs_response = "Who watches the watchers?";
 
