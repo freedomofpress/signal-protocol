@@ -1,5 +1,7 @@
 import pytest
 
+from tests.utils.sessions import run_interaction
+
 from signal_protocol import curve, address, error, identity_key, protocol, session, session_cipher, state, storage
 
 DEVICE_ID = 1
@@ -97,12 +99,7 @@ def test_basic_prekey_v3():
     alice_decrypts = session_cipher.message_decrypt(alice_store, bob_address, bob_outgoing)
     assert alice_decrypts.decode('utf8') == bobs_response
 
-    #     run_interaction(
-    #         &mut alice_store,
-    #         &alice_address,
-    #         &mut bob_store,
-    #         &bob_address,
-    #     )?;
+    run_interaction(alice_store, alice_address, bob_store, bob_address)
 
     alice_identity_key_pair = identity_key.IdentityKeyPair.generate()
     alice_registration_id = 1 #TODO: generate these

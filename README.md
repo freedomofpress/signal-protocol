@@ -17,11 +17,11 @@ See in particular `tests/test_session.py` for a simulated session between two pa
 
 ## Developer Getting Started
 
-You will need both [Rust](https://rustup.rs/) and Python 3 installed on your system. To install the project in your virtualenv:
+You will need both [Rust](https://rustup.rs/) and Python 3.7+ installed on your system. To install the project in your virtualenv:
 
 ```
 pip install -r requirements.txt
 python setup.py develop  # This will call out to rustc
 ```
 
-Then run the tests via `pytest -v tests/` to confirm all is working. You can use the tests as a reference for how to use the library.
+Then run the tests via `pytest -v tests/` to confirm all is working. Tests are primarily those from the upstream crate but ported to Python. You can use the tests as a reference for how to use the library.
