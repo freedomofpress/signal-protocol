@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use pyo3::pyclass::PyClassAlloc;
 use pyo3::wrap_pyfunction;
 use pyo3::exceptions;
+use pyo3::types::PyBytes;
 
 use rand::rngs::OsRng;
 
@@ -19,7 +20,7 @@ pub struct SessionRecord {
     pub state: libsignal_protocol_rust::SessionRecord
 }
 
-/// Note: Many objects defined on SessionState are defined directly on SessionRecord
+/// Note: Many methods defined on SessionState are defined directly on SessionRecord
 /// where it made sense instead. This is because a SessionState adapter object cannot
 /// take ownership of libsignal_protocol_rust::SessionState,
 /// and libsignal_protocol_rust::SessionState does not implement Copy.
@@ -43,6 +44,20 @@ impl SessionRecord {
         match session_state.unwrap().session_version() {
             Ok(version)  => Ok(version),
             Err(_e) => Err(SignalProtocolError::new_err("unknown signal error"))
+        }
+    }
+
+    pub fn alice_base_key(&self, py: Python) -> PyResult<PyObject> {
+        let session_state = self.state.session_state();
+
+        match session_state {
+            Ok(session_state) => (),
+            Err(_e) => return Err(SignalProtocolError::new_err("no session found"))
+        };
+
+        match session_state.unwrap().alice_base_key() {
+            Ok(key)  => Ok(PyBytes::new(py, key).into()),
+            Err(_e) => Err(SignalProtocolError::new_err("cannot get base key"))
         }
     }
 }

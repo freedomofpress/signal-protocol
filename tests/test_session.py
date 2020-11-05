@@ -85,14 +85,7 @@ def test_basic_prekey_v3():
 
     bobs_session_with_alice = bob_store.load_session(alice_address)
     assert bobs_session_with_alice.session_version() == 3
-
-    # assert_eq!(
-    #     bobs_session_with_alice
-    #         .session_state()?
-    #         .alice_base_key()?
-    #         .len(),
-    #     32 + 1
-    # );
+    assert len(bobs_session_with_alice.alice_base_key()) == 32 + 1
 
     bob_outgoing = session_cipher.message_encrypt(bob_store, alice_address, bobs_response)
     assert bob_outgoing.message_type() == 2  # 2 == CiphertextMessageType::Whisper
