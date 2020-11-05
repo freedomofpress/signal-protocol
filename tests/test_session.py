@@ -54,7 +54,7 @@ def test_basic_prekey_v3():
     original_message = "Hobgoblins hold themselves to high standards of military honor"
 
     outgoing_message = session_cipher.message_encrypt(alice_store, bob_address, original_message)
-    outgoing_message.message_type() == 3  # 3 means PreKey
+    outgoing_message.message_type() == 3  # 3 == CiphertextMessageType::PreKey
     outgoing_message_wire = outgoing_message.serialize()
 
     # Now over to fake Bob for processing the first message
@@ -73,33 +73,34 @@ def test_basic_prekey_v3():
 
     bob_store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 
+    assert bob_store.load_session(alice_address) is None
+
     plaintext = session_cipher.message_decrypt(bob_store, alice_address, incoming_message)
 
     assert original_message == plaintext.decode('utf8')
 
-#     let bobs_response = "Who watches the watchers?";
+    bobs_response = "Who watches the watchers?"
 
-#     assert!(bob_store.load_session(&alice_address, None)?.is_some());
-#     let bobs_session_with_alice = bob_store.load_session(&alice_address, None)?.unwrap();
-#     assert_eq!(
-#         bobs_session_with_alice.session_state()?.session_version()?,
-#         3
-#     );
-#     assert_eq!(
-#         bobs_session_with_alice
-#             .session_state()?
-#             .alice_base_key()?
-#             .len(),
-#         32 + 1
-#     );
+    assert bob_store.load_session(alice_address)
 
-#     let bob_outgoing = encrypt(&mut bob_store, &alice_address, bobs_response)?;
+    bobs_session_with_alice = bob_store.load_session(alice_address)
+    assert bobs_session_with_alice.session_version() == 3
 
-#     assert_eq!(bob_outgoing.message_type(), CiphertextMessageType::Whisper);
+    # assert_eq!(
+    #     bobs_session_with_alice
+    #         .session_state()?
+    #         .alice_base_key()?
+    #         .len(),
+    #     32 + 1
+    # );
 
-#     let alice_decrypts = decrypt(&mut alice_store, &bob_address, &bob_outgoing)?;
+    bob_outgoing = session_cipher.message_encrypt(bob_store, alice_address, bobs_response)
+    assert bob_outgoing.message_type() == 2  # 2 == CiphertextMessageType::Whisper
 
-#     assert_eq!(String::from_utf8(alice_decrypts).unwrap(), bobs_response);
+    # Now back to fake alice
+
+    alice_decrypts = session_cipher.message_decrypt(alice_store, bob_address, bob_outgoing)
+    assert alice_decrypts.decode('utf8') == bobs_response
 
 #     run_interaction(
 #         &mut alice_store,
