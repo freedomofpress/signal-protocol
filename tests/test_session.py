@@ -172,3 +172,68 @@ def test_basic_prekey_v3():
             bob_address,
             alice_store,
             bob_pre_key_bundle)
+
+
+def test_bad_signed_pre_key_signature():
+    bob_address = address.ProtocolAddress("+14151111112", DEVICE_ID)
+
+    alice_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    bob_identity_key_pair = identity_key.IdentityKeyPair.generate()
+
+    alice_registration_id = 1 #TODO: generate these
+    bob_registration_id = 2
+
+    alice_store = storage.InMemSignalProtocolStore(alice_identity_key_pair, alice_registration_id)
+    bob_store = storage.InMemSignalProtocolStore(bob_identity_key_pair, bob_registration_id)
+
+    bob_pre_key_pair = curve.KeyPair.generate()
+    bob_signed_pre_key_pair = curve.KeyPair.generate()
+
+    bob_signed_pre_key_public = bob_signed_pre_key_pair.public_key().serialize()
+
+    bob_signed_pre_key_signature = bob_store.get_identity_key_pair() \
+                                            .private_key() \
+                                            .calculate_signature(bob_signed_pre_key_public)
+
+    pre_key_id = 31337
+    signed_pre_key_id = 22
+
+    for bit in range(8):
+        bit += len(bob_signed_pre_key_signature)
+
+        edit_point = bit // 8
+        bad_signature = bob_signed_pre_key_signature[:edit_point] + \
+                        bytes([bob_signed_pre_key_signature[edit_point] ^ 0x01 << (bit % 8)]) + \
+                        bob_signed_pre_key_signature[edit_point + 1:]
+
+        # Sanity checks for bad signature
+        assert len(bad_signature) == len(bob_signed_pre_key_signature)
+        assert bad_signature != bob_signed_pre_key_signature
+
+        bob_pre_key_bundle = state.PreKeyBundle(
+                bob_store.get_local_registration_id(),
+                DEVICE_ID,
+                pre_key_id,
+                bob_pre_key_pair.public_key(),
+                signed_pre_key_id,
+                bob_signed_pre_key_pair.public_key(),
+                bad_signature,
+                bob_store.get_identity_key_pair().identity_key(),
+            )
+
+        with pytest.raises(error.SignalProtocolError):
+            session.process_prekey_bundle(bob_address, alice_store, bob_pre_key_bundle)
+
+    # Finally check that the non-corrupted signature is accepted:
+    bob_pre_key_bundle = state.PreKeyBundle(
+                bob_store.get_local_registration_id(),
+                DEVICE_ID,
+                pre_key_id,
+                bob_pre_key_pair.public_key(),
+                signed_pre_key_id,
+                bob_signed_pre_key_pair.public_key(),
+                bob_signed_pre_key_signature,
+                bob_store.get_identity_key_pair().identity_key(),
+            )
+
+    session.process_prekey_bundle(bob_address, alice_store, bob_pre_key_bundle)
