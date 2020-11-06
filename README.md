@@ -49,6 +49,24 @@ signed_prekey = state.SignedPreKeyRecord(
 store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 ```
 
+## Sending a message to a new participant
+
+```
+from signal_protocol import session, session_cipher
+
+# To create a session, you must fetch a prekey bundle for the recipient from the server
+# Here the prekey bundle is `recipient_bundle` for participant `recipient_address`
+session.process_prekey_bundle(
+    recipient_address,
+    store,
+    recipient_bundle,
+)
+
+# Once the prekey bundle is processed (storing data from the recipient in your local
+# protocol store), you can encrypt messages
+ciphertext = session_cipher.message_encrypt(store, recipient_address, "hello")
+```
+
 # Developer Getting Started
 
 You will need both [Rust](https://rustup.rs/) and Python 3.7+ installed on your system. To install the project in your virtualenv:
