@@ -104,9 +104,12 @@ impl InMemSignalProtocolStore {
 /// libsignal_protocol_rust::PreKeyStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    // fn get_pre_key(&self, id: PreKeyId, ctx: Context) -> Result<PreKeyRecord> {
-    //     self.pre_key_store.get_pre_key(id, ctx)
-    // }
+    fn get_pre_key(&self, id: PreKeyId) -> PyResult<PreKeyRecord> {
+        match self.store.pre_key_store.get_pre_key(id, None) {
+            Ok(result)  => Ok(PreKeyRecord { state: result }),
+            Err(_e) => Err(SignalProtocolError::new_err("invalid prekey ID"))
+        }
+    }
 
     fn save_pre_key(&mut self, id: PreKeyId, record: &PreKeyRecord) -> PyResult<()> {
         match self.store.pre_key_store.save_pre_key(id, &record.state, None) {
