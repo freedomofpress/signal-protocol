@@ -472,8 +472,39 @@ def test_optional_one_time_prekey():
     assert original_message == plaintext.decode('utf8')
 
 
-def basic_session_v3():
+def test_basic_session_v3():
     # In the upstream test initialize_sessions_v3 returns SessionState which
     # is passed into the SessionRecord constructor. Here we use SessionRecord objects.
     alice_session_record, bob_session_record = initialize_sessions_v3()
     run_session_interaction(alice_session_record, bob_session_record)
+
+
+def test_message_key_limits():  # Note: slow test
+    alice_session_record, bob_session_record = initialize_sessions_v3()
+
+    alice_address = address.ProtocolAddress("+14159999999", 1)
+    bob_address = address.ProtocolAddress("+14158888888", 1)
+
+    alice_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    bob_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    alice_registration_id = 1 #TODO: generate these
+    bob_registration_id = 2
+    alice_store = storage.InMemSignalProtocolStore(alice_identity_key_pair, alice_registration_id)
+    bob_store = storage.InMemSignalProtocolStore(bob_identity_key_pair, bob_registration_id)
+
+    alice_store.store_session(bob_address, alice_session_record)
+    bob_store.store_session(alice_address, bob_session_record)
+
+    MAX_MESSAGE_KEYS = 2000
+    TOO_MANY_MESSAGES = MAX_MESSAGE_KEYS + 300
+
+    inflight = []
+
+    for i in range(TOO_MANY_MESSAGES):
+        inflight.append(session_cipher.message_encrypt(alice_store, bob_address, f"It's over {i}"))
+
+    assert session_cipher.message_decrypt(bob_store, alice_address, inflight[1000]).decode('utf8') == "It's over 1000"
+    assert session_cipher.message_decrypt(bob_store, alice_address, inflight[TOO_MANY_MESSAGES - 1]).decode('utf8') == f"It's over {TOO_MANY_MESSAGES - 1}"
+
+    with pytest.raises(error.SignalProtocolError):  # TODO: Assert it is SignalProtocolError::DuplicatedMessage(2300, 5)
+        session_cipher.message_decrypt(bob_store, alice_address, inflight[5])

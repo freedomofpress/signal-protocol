@@ -1,6 +1,6 @@
 import random
 
-from signal_protocol import curve, address, error, identity_key, protocol, session, session_cipher, state, storage
+from signal_protocol import curve, address, error, identity_key, protocol, ratchet, session, session_cipher, state, storage
 
 
 def run_interaction(alice_store: storage.InMemSignalProtocolStore,
@@ -125,7 +125,7 @@ def run_session_interaction(alice_session, bob_session):
     for i in range(ALICE_MESSAGE_COUNT):
         ptext = f"смерть за смерть {i}"
         ctext = session_cipher.message_encrypt(alice_store, bob_address, ptext)
-        alice_messages.push((ptext, ctext))
+        alice_messages.append((ptext, ctext))
 
     random.shuffle(alice_messages)
 
@@ -138,7 +138,7 @@ def run_session_interaction(alice_session, bob_session):
     for i in range(BOB_MESSAGE_COUNT):
         ptext = f"Relax in the safety of your own delusions. {i}"
         ctext = session_cipher.message_encrypt(bob_store, alice_address, ptext)
-        bob_messages.push((ptext, ctext))
+        bob_messages.append((ptext, ctext))
 
     random.shuffle(bob_messages)
 
