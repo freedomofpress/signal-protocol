@@ -91,14 +91,16 @@ impl InMemSignalProtocolStore {
             }
     }
 
-    // fn store_session(
-    //     &mut self,
-    //     address: &ProtocolAddress,
-    //     record: &SessionRecord,
-    //     ctx: Context,
-    // ) -> Result<()> {
-    //     self.session_store.store_session(address, record, ctx)
-    // }
+    fn store_session(
+        &mut self,
+        address: &ProtocolAddress,
+        record: &SessionRecord,
+    ) -> PyResult<()> {
+        match self.store.store_session(&address.state, &record.state, None) {
+            Ok(result)  => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not store session"))
+        }
+    }
 }
 
 /// libsignal_protocol_rust::PreKeyStore
