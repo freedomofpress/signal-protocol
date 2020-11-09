@@ -21,9 +21,11 @@ pub fn generate_keypair() -> PyResult<(Vec<u8>, Vec<u8>)> {
 /// new (passing in keys), from_public_and_private, calculate_signature,
 /// calculate_agreement
 #[pyclass]
+#[derive(Clone)]
 pub struct KeyPair {
     pub public_key: PublicKey,
     pub private_key: PrivateKey,
+    pub key: libsignal_protocol_rust::KeyPair,
 }
 
 #[pymethods]
@@ -41,6 +43,7 @@ impl KeyPair {
             private_key: PrivateKey {
                 key: keypair.private_key,
             },
+            key: keypair,
         }
     }
 

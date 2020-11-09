@@ -20,6 +20,12 @@ pub struct SessionRecord {
     pub state: libsignal_protocol_rust::SessionRecord
 }
 
+impl SessionRecord {
+    pub fn new(state: libsignal_protocol_rust::SessionState) -> Self {
+        SessionRecord{ state: libsignal_protocol_rust::SessionRecord::new(state) }
+    }
+}
+
 /// Note: Many methods defined on SessionState are defined directly on SessionRecord
 /// where it made sense instead. This is because a SessionState adapter object cannot
 /// take ownership of libsignal_protocol_rust::SessionState,

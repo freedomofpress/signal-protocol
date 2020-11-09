@@ -52,3 +52,37 @@ def run_interaction(alice_store: storage.InMemSignalProtocolStore,
     ## Now we check that messages can be decrypted when delivered out of order
     for (ptext, ctext) in alice_ooo_messages:
         assert session_cipher.message_decrypt(bob_store, alice_address, ctext).decode('utf8') == ptext
+
+
+def initialize_sessions_v3():
+    alice_identity = identity_key.IdentityKeyPair.generate()
+    bob_identity = identity_key.IdentityKeyPair.generate()
+
+    alice_base_key = curve.KeyPair.generate()
+
+    bob_base_key = curve.KeyPair.generate()
+    bob_ephemeral_key = bob_base_key
+
+    alice_params = ratchet.AliceSignalProtocolParameters(
+        alice_identity,
+        alice_base_key,
+        bob_identity.identity_key(),
+        bob_base_key.public_key(),
+        None,
+        bob_ephemeral_key.public_key(),
+    )
+
+    alice_session = ratchet.initialize_alice_session(alice_params)
+
+    bob_params = ratchet.BobSignalProtocolParameters(
+        bob_identity,
+        bob_base_key,
+        None,
+        bob_ephemeral_key,
+        alice_identity.identity_key(),
+        alice_base_key.public_key(),
+    )
+
+    bob_session = ratchet.initialize_bob_session(bob_params)
+
+    return alice_session, bob_session

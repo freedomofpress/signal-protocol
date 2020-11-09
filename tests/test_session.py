@@ -1,6 +1,6 @@
 import pytest
 
-from tests.utils.sessions import run_interaction
+from tests.utils.sessions import run_interaction, initialize_sessions_v3
 
 from signal_protocol import curve, address, error, identity_key, protocol, session, session_cipher, state, storage
 
@@ -470,3 +470,10 @@ def test_optional_one_time_prekey():
 
     plaintext = session_cipher.message_decrypt(bob_store, alice_address, incoming_message)
     assert original_message == plaintext.decode('utf8')
+
+
+def basic_session_v3():
+    # In the upstream test initialize_sessions_v3 returns SessionState which
+    # is passed into the SessionRecord constructor. Here we use SessionRecord objects.
+    alice_session_record, bob_session_record = initialize_sessions_v3()
+    # run_session_interaction(alice_session_record, bob_session_record)?;
