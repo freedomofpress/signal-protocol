@@ -153,3 +153,44 @@ def run_session_interaction(alice_session, bob_session):
     for i in range(BOB_MESSAGE_COUNT // 2, BOB_MESSAGE_COUNT):
         ptext = session_cipher.message_decrypt(alice_store, bob_address, bob_messages[i][1])
         assert ptext.decode('utf8') == bob_messages[i][0]
+
+
+def is_session_id_equal(alice_store, alice_address, bob_store, bob_address) -> bool:
+    return alice_store.load_session(bob_address).alice_base_key() == bob_store.load_session(alice_address).alice_base_key()
+
+
+def create_pre_key_bundle(store):
+    pre_key_pair = curve.KeyPair.generate()
+    signed_pre_key_pair = curve.KeyPair.generate()
+
+    signed_pre_key_public = signed_pre_key_pair.public_key().serialize()
+    signed_pre_key_signature = store.get_identity_key_pair().private_key().calculate_signature(signed_pre_key_public)
+
+    device_id = random.randint(1, 10000)
+    pre_key_id = random.randint(1, 10000)
+    signed_pre_key_id = random.randint(1, 10000)
+
+    pre_key_bundle = state.PreKeyBundle(
+        store.get_local_registration_id(),
+        device_id,
+        pre_key_id,
+        pre_key_pair.public_key(),
+        signed_pre_key_id,
+        signed_pre_key_pair.public_key(),
+        signed_pre_key_signature,
+        store.get_identity_key_pair().identity_key(),
+    )
+
+    store.save_pre_key(pre_key_id, state.PreKeyRecord(pre_key_id, pre_key_pair))
+
+    timestamp = random.randint(1, 10000)
+
+    signed_prekey = state.SignedPreKeyRecord(
+            signed_pre_key_id,
+            timestamp,
+            signed_pre_key_pair,
+            signed_pre_key_signature,
+        )
+    store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
+
+    return pre_key_bundle
