@@ -63,8 +63,23 @@ impl PreKeySignalMessage {
     }
 }
 
+#[pyclass]
+pub struct SignalMessage {
+    pub data: libsignal_protocol_rust::SignalMessage
+}
+
+#[pymethods]
+impl SignalMessage {
+    #[staticmethod]
+    pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
+        Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::SignalMessage(libsignal_protocol_rust::SignalMessage::try_from(data).unwrap()) })
+    }
+}
+
+
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<CiphertextMessage>()?;
     module.add_class::<PreKeySignalMessage>()?;
+    module.add_class::<SignalMessage>()?;
     Ok(())
 }
