@@ -580,3 +580,68 @@ def test_basic_simultaneous_initiate():
         )
     assert response_plaintext.decode('utf8') == "you as well"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
+
+
+def test_simultaneous_initiate_with_lossage():
+    alice_address = address.ProtocolAddress("+14151111111", 1)
+    bob_address = address.ProtocolAddress("+14151111112", 1)
+
+    alice_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    bob_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    alice_registration_id = 1 #TODO: generate these
+    bob_registration_id = 2
+    alice_store = storage.InMemSignalProtocolStore(alice_identity_key_pair, alice_registration_id)
+    bob_store = storage.InMemSignalProtocolStore(bob_identity_key_pair, bob_registration_id)
+
+    alice_pre_key_bundle = create_pre_key_bundle(alice_store)
+    bob_pre_key_bundle = create_pre_key_bundle(bob_store)
+
+
+    session.process_prekey_bundle(
+        bob_address,
+        alice_store,
+        bob_pre_key_bundle,
+    )
+    session.process_prekey_bundle(
+        alice_address,
+        bob_store,
+        alice_pre_key_bundle,
+    )
+
+    message_for_bob = session_cipher.message_encrypt(alice_store, bob_address, "hi bob")
+    message_for_alice = session_cipher.message_encrypt(bob_store, alice_address, "hi alice")
+
+    assert message_for_bob.message_type() == 3  # 3 == CiphertextMessageType::PreKey
+    assert message_for_alice.message_type() == 3  # 3 == CiphertextMessageType::PreKey
+
+    assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
+
+    bob_plaintext = session_cipher.message_decrypt(
+        bob_store, alice_address,
+        protocol.PreKeySignalMessage.try_from(message_for_bob.serialize()))
+    assert bob_plaintext.decode('utf8') == "hi bob"
+
+    assert alice_store.load_session(bob_address).session_version() == 3
+    assert bob_store.load_session(alice_address).session_version() == 3
+
+    alice_response = session_cipher.message_encrypt(alice_store, bob_address, "nice to see you")
+
+    assert alice_response.message_type() == 3  # 3 == CiphertextMessageType::PreKey
+
+    response_plaintext = session_cipher.message_decrypt(
+        bob_store,
+        alice_address, protocol.PreKeySignalMessage.try_from(alice_response.serialize())
+        )
+    assert response_plaintext.decode('utf8') == "nice to see you"
+
+    assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
+
+    bob_response = session_cipher.message_encrypt(bob_store, alice_address, "you as well")
+    assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
+
+    response_plaintext = session_cipher.message_decrypt(
+        alice_store,
+        bob_address, protocol.SignalMessage.try_from(bob_response.serialize())
+        )
+    assert response_plaintext.decode('utf8') == "you as well"
+    assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
