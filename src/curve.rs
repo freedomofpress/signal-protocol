@@ -18,52 +18,46 @@ pub fn generate_keypair() -> PyResult<(Vec<u8>, Vec<u8>)> {
 }
 
 /// Methods from libsignal-protocol-rust not implemented:
-/// new (passing in keys), from_public_and_private, calculate_signature,
+/// from_public_and_private, calculate_signature,
 /// calculate_agreement
 #[pyclass]
 #[derive(Clone)]
 pub struct KeyPair {
-    pub public_key: PublicKey,
-    pub private_key: PrivateKey,
     pub key: libsignal_protocol_rust::KeyPair,
 }
 
 #[pymethods]
 impl KeyPair {
     #[new]
-    fn new() -> Self {
-        // Currently this method generates a new key and does
-        // not allow one to pass in a PublicKey or PrivateKey.
+    fn new(public_key: PublicKey, private_key: PrivateKey) -> Self {
         let mut csprng = OsRng;
-        let keypair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
+        let keypair = libsignal_protocol_rust::KeyPair::new(public_key.key, private_key.key);
         KeyPair {
-            public_key: PublicKey {
-                key: keypair.public_key,
-            },
-            private_key: PrivateKey {
-                key: keypair.private_key,
-            },
             key: keypair,
         }
     }
 
     #[staticmethod]
     fn generate() -> Self {
-        Self::new()
+        let mut csprng = OsRng;
+        let keypair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
+        KeyPair {
+            key: keypair,
+        }
     }
 
     pub fn public_key(&self, py: Python) -> PyResult<PublicKey> {
-        let public_key = PublicKey::deserialize(&self.public_key.key.serialize()).unwrap();
+        let public_key = PublicKey::deserialize(&self.key.public_key.serialize()).unwrap();
         Ok(public_key)
     }
 
     pub fn private_key(&self, py: Python) -> PyResult<PrivateKey> {
-        let private_key = PrivateKey::deserialize(&self.private_key.key.serialize()).unwrap();
+        let private_key = PrivateKey::deserialize(&self.key.private_key.serialize()).unwrap();
         Ok(private_key)
     }
 
     pub fn serialize(&self, py: Python) -> PyResult<PyObject> {
-        Ok(PyBytes::new(py, &self.public_key.key.serialize()).into())
+        Ok(PyBytes::new(py, &self.key.public_key.serialize()).into())
     }
 }
 
@@ -134,6 +128,7 @@ pub fn verify_signature(
         .unwrap())
 }
 
+/// KeyType is not exposed as part of the Python API.
 pub fn init_curve_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<KeyPair>()?;
     module.add_class::<PublicKey>()?;

@@ -41,6 +41,35 @@ impl AliceSignalProtocolParameters {
             upstream_their_one_time_pre_key,
             their_ratchet_key.key)}
     }
+
+    pub fn our_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
+        Ok(IdentityKeyPair{ key: *self.inner.our_identity_key_pair() })
+    }
+
+    pub fn our_base_key_pair(&self) -> PyResult<KeyPair> {
+        Ok(KeyPair{ key: *self.inner.our_base_key_pair() })
+    }
+
+    pub fn their_identity_key(&self) -> PyResult<IdentityKey> {
+        Ok(IdentityKey{ key: *self.inner.their_identity_key() })
+    }
+
+    pub fn their_signed_pre_key(&self) -> PyResult<PublicKey> {
+        Ok(PublicKey{ key: *self.inner.their_signed_pre_key() })
+    }
+
+    pub fn their_one_time_pre_key(&self) -> PyResult<Option<PublicKey>> {
+        let key = match self.inner.their_one_time_pre_key() {
+            None => return Ok(None),
+            Some(key) => key
+        };
+
+        Ok(Some(PublicKey{ key: *key }))
+    }
+
+    pub fn their_ratchet_key(&self) -> PyResult<PublicKey> {
+        Ok(PublicKey{ key: *self.inner.their_ratchet_key() })
+    }
 }
 
 #[pyfunction]
@@ -82,6 +111,35 @@ impl BobSignalProtocolParameters {
             their_identity_key.key,
             their_base_key.key)}
     }
+
+    pub fn our_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
+        Ok(IdentityKeyPair{ key: *self.inner.our_identity_key_pair() })
+    }
+
+    pub fn our_signed_pre_key_pair(&self) -> PyResult<KeyPair> {
+        Ok(KeyPair{ key: *self.inner.our_signed_pre_key_pair() })
+    }
+
+    pub fn our_one_time_pre_key_pair(&self) -> PyResult<Option<KeyPair>> {
+        let keypair = match self.inner.our_one_time_pre_key_pair() {
+            None => return Ok(None),
+            Some(keypair) => keypair
+        };
+
+        Ok(Some(KeyPair{ key: *keypair }))
+    }
+
+    pub fn our_ratchet_key_pair(&self) -> PyResult<KeyPair> {
+        Ok(KeyPair{ key: *self.inner.our_ratchet_key_pair() })
+    }
+
+    pub fn their_identity_key(&self) -> PyResult<IdentityKey> {
+        Ok(IdentityKey{ key: *self.inner.their_identity_key() })
+    }
+
+    pub fn their_base_key(&self) -> PyResult<PublicKey> {
+        Ok(PublicKey{ key: *self.inner.their_base_key() })
+    }
 }
 
 #[pyfunction]
@@ -93,6 +151,7 @@ pub fn initialize_bob_session(parameters: &BobSignalProtocolParameters) -> PyRes
     }
 }
 
+// fn are_we_alice is not exposed as part of the Python API.
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<AliceSignalProtocolParameters>()?;
     module.add_wrapped(wrap_pyfunction!(initialize_alice_session))?;

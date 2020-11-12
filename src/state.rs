@@ -67,8 +67,8 @@ pub struct PreKeyRecord {
 #[pymethods]
 impl PreKeyRecord {
     #[new]
-    fn new(id: PreKeyId, key: &KeyPair) -> Self {
-        let key = libsignal_protocol_rust::KeyPair::new(key.public_key.key, key.private_key.key);
+    fn new(id: PreKeyId, keypair: &KeyPair) -> Self {
+        let key = libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
         PreKeyRecord { state: libsignal_protocol_rust::PreKeyRecord::new(id, &key) }
     }
 }
@@ -82,8 +82,8 @@ pub struct SignedPreKeyRecord {
 #[pymethods]
 impl SignedPreKeyRecord {
     #[new]
-    fn new(id: SignedPreKeyId, timestamp: u64, key: &KeyPair, signature: &[u8]) -> Self {
-        let key = libsignal_protocol_rust::KeyPair::new(key.public_key.key, key.private_key.key);
+    fn new(id: SignedPreKeyId, timestamp: u64, keypair: &KeyPair, signature: &[u8]) -> Self {
+        let key = libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
         SignedPreKeyRecord { state: libsignal_protocol_rust::SignedPreKeyRecord::new(id, timestamp, &key, &signature) }
     }
 }
