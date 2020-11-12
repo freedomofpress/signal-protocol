@@ -51,7 +51,7 @@ store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 
 ## Sending a message to a new participant
 
-```
+```py
 from signal_protocol import session, session_cipher
 
 # To create a session, you must fetch a prekey bundle for the recipient from the server
@@ -76,4 +76,4 @@ pip install -r requirements.txt
 python setup.py develop  # This will call out to rustc
 ```
 
-Then run the tests via `pytest -v tests/` to confirm all is working. Tests are primarily those from the upstream crate but ported to Python. You can use the tests as a reference for how to use the library.
+Then run the tests via `pytest -v tests/` to confirm all is working. Tests are ported to Python from the upstream crate. You can use the tests as a reference for how to use the library.

@@ -1,14 +1,11 @@
 use pyo3::prelude::*;
+use pyo3::class::basic::PyObjectProtocol;
 
 use libsignal_protocol_rust;
 
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct ProtocolAddress {
-    #[pyo3(get)]
-    name: String,
-    #[pyo3(get)]
-    device_id: u32,
     pub state: libsignal_protocol_rust::ProtocolAddress,
 }
 
@@ -17,10 +14,27 @@ impl ProtocolAddress {
     #[new]
     fn new(name: String, device_id: u32) -> ProtocolAddress {
         ProtocolAddress {
-            name: name.clone(),
-            device_id: device_id.clone(),
             state: libsignal_protocol_rust::ProtocolAddress::new(name, device_id),
         }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.state.name()
+    }
+
+    pub fn device_id(&self) -> u32 {
+        self.state.device_id()
+    }
+}
+
+#[pyproto]
+impl PyObjectProtocol for ProtocolAddress {
+    fn __str__(&self) -> PyResult<String> {
+        Ok(String::from(format!("{} {}", self.name(), self.device_id())))
+    }
+
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(String::from(format!("ProtocolAddress({}, {})", self.name(), self.device_id())))
     }
 }
 
