@@ -6,8 +6,7 @@ use rand::rngs::OsRng;
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
-use crate::session::SessionRecord;
-use crate::state::{PreKeyId,PreKeyRecord,SignedPreKeyRecord,SignedPreKeyId};
+use crate::state::{PreKeyId,PreKeyRecord,SessionRecord,SignedPreKeyRecord,SignedPreKeyId};
 
 use libsignal_protocol_rust;
 // traits

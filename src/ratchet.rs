@@ -8,7 +8,7 @@ use rand::rngs::OsRng;
 use crate::curve::{KeyPair,PublicKey};
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey,IdentityKeyPair};
-use crate::session::SessionRecord;
+use crate::state::SessionRecord;
 
 use libsignal_protocol_rust;
 
