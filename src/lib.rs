@@ -21,6 +21,7 @@ mod storage;
 ///
 /// >>> pub, priv = signal_protocol.curve.generate_keypair()
 ///
+/// We do not expose a Python submodule for HKDF (a module in the upstream crate).
 #[pymodule]
 fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let address_submod = PyModule::new(py, "address")?;

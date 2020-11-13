@@ -151,7 +151,10 @@ pub fn initialize_bob_session(parameters: &BobSignalProtocolParameters) -> PyRes
     }
 }
 
-// fn are_we_alice is not exposed as part of the Python API.
+/// fn are_we_alice is not exposed as part of the Python API.
+///
+/// In ratchet/keys.rs in the upstream crate, MessageKeys, ChainKey, RootKey are
+/// exposed, but we do not expose them as part of the Python API.
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<AliceSignalProtocolParameters>()?;
     module.add_wrapped(wrap_pyfunction!(initialize_alice_session))?;
