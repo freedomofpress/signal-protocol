@@ -11,9 +11,17 @@ use rand::rngs::OsRng;
 use libsignal_protocol_rust;
 
 use crate::address::ProtocolAddress;
+use crate::curve::PublicKey;
+use crate::identity_key::IdentityKey;
 use crate::state::PreKeyBundle;
 use crate::storage::InMemSignalProtocolStore;
 
+/// CiphertextMessage is a Rust enum in the upstream crate. Mapping of enums is not supported
+/// in pyo3.
+/// Approach: Map Rust enum and its variants to Python as a superclass and subclasses.
+/// Subtype relation for Rust variant (PreKeySignalMessage) and its enum:
+/// PreKeySignalMessage <: CiphertextMessage
+/// In Python the subclass/superclass has the same subtype relation (subclass <: superclass).
 #[pyclass]
 pub struct CiphertextMessage {
     pub data: libsignal_protocol_rust::CiphertextMessage
@@ -42,19 +50,11 @@ impl CiphertextMessage {
 }
 
 /// CiphertextMessageType::PreKey => 3
-#[pyclass]
+#[pyclass(extends=CiphertextMessage)]
 pub struct PreKeySignalMessage {
     pub data: libsignal_protocol_rust::PreKeySignalMessage
 }
 
-/// Rust enums cannot be mapped to Python enums in PyO3. This means
-/// that here PreKeySignalMessage is not a subtype of CiphertextMessage.
-/// This means if we try to use PreKeySignalMessage in e.g.
-/// session_cipher::message_decrypt, we'll get a type error as those methods
-/// require CiphertextMessage.
-///
-/// We handle this by having the try_from constructor on PreKeySignalMessage
-/// actually create a CiphertextMessage under the hood. (TODO: better solution here?)
 #[pymethods]
 impl PreKeySignalMessage {
     #[staticmethod]
@@ -70,7 +70,7 @@ impl PreKeySignalMessage {
 /// CiphertextMessageType::Whisper
 #[pyclass]
 pub struct SignalMessage {
-    pub data: libsignal_protocol_rust::SignalMessage
+    pub data: libsignal_protocol_rust::CiphertextMessage
 }
 
 #[pymethods]
@@ -78,6 +78,32 @@ impl SignalMessage {
     #[staticmethod]
     pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
         Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::SignalMessage(libsignal_protocol_rust::SignalMessage::try_from(data).unwrap()) })
+    }
+
+    #[new]
+    pub fn new(message_version: u8,
+        mac_key: &[u8],
+        sender_ratchet_key: PublicKey,
+        counter: u32,
+        previous_counter: u32,
+        ciphertext: &[u8],
+        sender_identity_key: &IdentityKey,
+        receiver_identity_key: &IdentityKey
+    ) -> (Self, CiphertextMessage) {
+        let msg = libsignal_protocol_rust::CiphertextMessage::SignalMessage(libsignal_protocol_rust::SignalMessage::new(
+            message_version,
+            mac_key,
+            sender_ratchet_key.key,
+            counter,
+            previous_counter,
+            &ciphertext,
+            &sender_identity_key.key,
+            &receiver_identity_key.key
+        ).unwrap());
+        (
+            SignalMessage{ data: msg },
+            CiphertextMessage::new(msg)
+        )
     }
 }
 
@@ -109,7 +135,7 @@ impl SenderKeyDistributionMessage {
     }
 }
 
-/// CiphertextMessageType is an Enum that cannot yet be exposed as part
+/// CiphertextMessageType is an Enum that is not exposed as part
 /// of the Python API.
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<CiphertextMessage>()?;
