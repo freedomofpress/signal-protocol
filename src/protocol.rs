@@ -5,6 +5,7 @@ use pyo3::pyclass::PyClassAlloc;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 use pyo3::exceptions;
+use pyo3::pyclass_init::PyClassInitializer;
 
 use rand::rngs::OsRng;
 
@@ -19,8 +20,8 @@ use crate::storage::InMemSignalProtocolStore;
 /// CiphertextMessage is a Rust enum in the upstream crate. Mapping of enums is not supported
 /// in pyo3.
 /// Approach: Map Rust enum and its variants to Python as a superclass and subclasses.
-/// Subtype relation for Rust variant (PreKeySignalMessage) and its enum:
-/// PreKeySignalMessage <: CiphertextMessage
+/// Subtype relation for Rust variant (SignalMessage) and its enum (CiphertextMessage):
+/// SignalMessage <: CiphertextMessage
 /// In Python the subclass/superclass has the same subtype relation (subclass <: superclass).
 #[pyclass]
 pub struct CiphertextMessage {
@@ -80,6 +81,7 @@ impl SignalMessage {
         Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::SignalMessage(libsignal_protocol_rust::SignalMessage::try_from(data).unwrap()) })
     }
 
+    // Used to return (Self, CiphertextMessage)
     #[new]
     pub fn new(message_version: u8,
         mac_key: &[u8],
@@ -89,7 +91,7 @@ impl SignalMessage {
         ciphertext: &[u8],
         sender_identity_key: &IdentityKey,
         receiver_identity_key: &IdentityKey
-    ) -> (Self, CiphertextMessage) {
+    ) -> PyClassInitializer<Self>  {
         let msg = libsignal_protocol_rust::CiphertextMessage::SignalMessage(libsignal_protocol_rust::SignalMessage::new(
             message_version,
             mac_key,
@@ -100,10 +102,12 @@ impl SignalMessage {
             &sender_identity_key.key,
             &receiver_identity_key.key
         ).unwrap());
-        (
-            SignalMessage{ data: msg },
-            CiphertextMessage::new(msg)
-        )
+        //(
+        //     SignalMessage{ data: msg },
+        //     CiphertextMessage::new(msg)
+        // )
+        let base_init = PyClassInitializer::from(CiphertextMessage::new(msg));
+        base_init.add_subclass(SignalMessage{ data: msg })
     }
 }
 
