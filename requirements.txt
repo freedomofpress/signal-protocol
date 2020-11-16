@@ -1,3 +1,4 @@
+black
 setuptools
 setuptools-rust
 wheel

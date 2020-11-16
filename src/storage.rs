@@ -6,11 +6,11 @@ use rand::rngs::OsRng;
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
-use crate::state::{PreKeyId,PreKeyRecord,SessionRecord,SignedPreKeyRecord,SignedPreKeyId};
+use crate::state::{PreKeyId, PreKeyRecord, SessionRecord, SignedPreKeyId, SignedPreKeyRecord};
 
 use libsignal_protocol_rust;
 // traits
-use libsignal_protocol_rust::{SessionStore, IdentityKeyStore, PreKeyStore, SignedPreKeyStore};
+use libsignal_protocol_rust::{IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore};
 
 #[pyclass]
 pub struct InMemSignalProtocolStore {
@@ -56,8 +56,11 @@ impl InMemSignalProtocolStore {
         address: &ProtocolAddress,
         identity: &IdentityKey,
     ) -> PyResult<bool> {
-
-        Ok(self.store.identity_store.save_identity(&address.state, &identity.key, None).unwrap())
+        Ok(self
+            .store
+            .identity_store
+            .save_identity(&address.state, &identity.key, None)
+            .unwrap())
     }
 
     // fn is_trusted_identity(
@@ -79,25 +82,20 @@ impl InMemSignalProtocolStore {
 /// libsignal_protocol_rust::SessionStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    pub fn load_session(
-        &self,
-        address: &ProtocolAddress,
-    ) -> PyResult<Option<SessionRecord>> {
-
+    pub fn load_session(&self, address: &ProtocolAddress) -> PyResult<Option<SessionRecord>> {
         match self.store.load_session(&address.state, None).unwrap() {
             None => Ok(None),
-            Some(session) => Ok(Some(SessionRecord{state: session}))
-            }
+            Some(session) => Ok(Some(SessionRecord { state: session })),
+        }
     }
 
-    fn store_session(
-        &mut self,
-        address: &ProtocolAddress,
-        record: &SessionRecord,
-    ) -> PyResult<()> {
-        match self.store.store_session(&address.state, &record.state, None) {
-            Ok(result)  => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not store session"))
+    fn store_session(&mut self, address: &ProtocolAddress, record: &SessionRecord) -> PyResult<()> {
+        match self
+            .store
+            .store_session(&address.state, &record.state, None)
+        {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not store session")),
         }
     }
 }
@@ -107,15 +105,19 @@ impl InMemSignalProtocolStore {
 impl InMemSignalProtocolStore {
     fn get_pre_key(&self, id: PreKeyId) -> PyResult<PreKeyRecord> {
         match self.store.pre_key_store.get_pre_key(id, None) {
-            Ok(result)  => Ok(PreKeyRecord { state: result }),
-            Err(_e) => Err(SignalProtocolError::new_err("invalid prekey ID"))
+            Ok(result) => Ok(PreKeyRecord { state: result }),
+            Err(_e) => Err(SignalProtocolError::new_err("invalid prekey ID")),
         }
     }
 
     fn save_pre_key(&mut self, id: PreKeyId, record: &PreKeyRecord) -> PyResult<()> {
-        match self.store.pre_key_store.save_pre_key(id, &record.state, None) {
-            Ok(result)  => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error"))
+        match self
+            .store
+            .pre_key_store
+            .save_pre_key(id, &record.state, None)
+        {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error")),
         }
     }
 
@@ -140,9 +142,12 @@ impl InMemSignalProtocolStore {
         id: SignedPreKeyId,
         record: &SignedPreKeyRecord,
     ) -> PyResult<()> {
-        match self.store.save_signed_pre_key(id, &record.state.to_owned(), None) {
-            Ok(_result)  => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not save signed prekey"))
+        match self
+            .store
+            .save_signed_pre_key(id, &record.state.to_owned(), None)
+        {
+            Ok(_result) => Ok(()),
+            Err(_e) => Err(SignalProtocolError::new_err("could not save signed prekey")),
         }
     }
 }

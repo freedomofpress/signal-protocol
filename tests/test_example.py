@@ -24,7 +24,11 @@ def test_example_doc():
     # Clients should also generate a signed prekey.
     signed_pre_key_pair = curve.KeyPair.generate()
     serialized_signed_pre_pub_key = signed_pre_key_pair.public_key().serialize()
-    signed_pre_key_signature = store.get_identity_key_pair().private_key().calculate_signature(serialized_signed_pre_pub_key)
+    signed_pre_key_signature = (
+        store.get_identity_key_pair()
+        .private_key()
+        .calculate_signature(serialized_signed_pre_pub_key)
+    )
 
     # Clients should store their prekeys (both one-time and signed) in the protocol store along
     # with IDs that can be used to retrieve them later.
@@ -34,9 +38,9 @@ def test_example_doc():
 
     signed_pre_key_id = 33
     signed_prekey = state.SignedPreKeyRecord(
-                signed_pre_key_id,
-                42, # This is a timestamp since the signed prekeys should be periodically rotated
-                signed_pre_key_pair,
-                signed_pre_key_signature,
-            )
+        signed_pre_key_id,
+        42,  # This is a timestamp since the signed prekeys should be periodically rotated
+        signed_pre_key_pair,
+        signed_pre_key_signature,
+    )
     store.save_signed_pre_key(signed_pre_key_id, signed_prekey)

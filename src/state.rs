@@ -1,11 +1,11 @@
-use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 use pyo3::exceptions;
+use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use pyo3::wrap_pyfunction;
 
 use libsignal_protocol_rust;
 
-use crate::curve::{PublicKey, KeyPair};
+use crate::curve::{KeyPair, PublicKey};
 use crate::identity_key::IdentityKey;
 
 use crate::error::SignalProtocolError;
@@ -33,10 +33,10 @@ impl PreKeyBundle {
         signed_pre_key_signature: Vec<u8>,
         identity_key: IdentityKey,
     ) -> PyResult<Self> {
-
-        let pre_key: std::option::Option<libsignal_protocol_rust::PublicKey> = match pre_key_public {
-            Some(inner)  => Some(inner.key),
-            None => None
+        let pre_key: std::option::Option<libsignal_protocol_rust::PublicKey> = match pre_key_public
+        {
+            Some(inner) => Some(inner.key),
+            None => None,
         };
 
         let signed_pre_key = signed_pre_key_public.key;
@@ -68,8 +68,11 @@ pub struct PreKeyRecord {
 impl PreKeyRecord {
     #[new]
     fn new(id: PreKeyId, keypair: &KeyPair) -> Self {
-        let key = libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
-        PreKeyRecord { state: libsignal_protocol_rust::PreKeyRecord::new(id, &key) }
+        let key =
+            libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
+        PreKeyRecord {
+            state: libsignal_protocol_rust::PreKeyRecord::new(id, &key),
+        }
     }
 }
 
@@ -83,20 +86,27 @@ pub struct SignedPreKeyRecord {
 impl SignedPreKeyRecord {
     #[new]
     fn new(id: SignedPreKeyId, timestamp: u64, keypair: &KeyPair, signature: &[u8]) -> Self {
-        let key = libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
-        SignedPreKeyRecord { state: libsignal_protocol_rust::SignedPreKeyRecord::new(id, timestamp, &key, &signature) }
+        let key =
+            libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
+        SignedPreKeyRecord {
+            state: libsignal_protocol_rust::SignedPreKeyRecord::new(
+                id, timestamp, &key, &signature,
+            ),
+        }
     }
 }
 
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct SessionRecord {
-    pub state: libsignal_protocol_rust::SessionRecord
+    pub state: libsignal_protocol_rust::SessionRecord,
 }
 
 impl SessionRecord {
     pub fn new(state: libsignal_protocol_rust::SessionState) -> Self {
-        SessionRecord{ state: libsignal_protocol_rust::SessionRecord::new(state) }
+        SessionRecord {
+            state: libsignal_protocol_rust::SessionRecord::new(state),
+        }
     }
 }
 
@@ -109,7 +119,9 @@ impl SessionRecord {
 impl SessionRecord {
     #[staticmethod]
     pub fn new_fresh() -> Self {
-        SessionRecord{ state: libsignal_protocol_rust::SessionRecord::new_fresh() }
+        SessionRecord {
+            state: libsignal_protocol_rust::SessionRecord::new_fresh(),
+        }
     }
 
     // TODO: Extract useful err info from within SignalProtocolError? using its fmt::Display impl
@@ -118,12 +130,12 @@ impl SessionRecord {
 
         match session_state {
             Ok(session_state) => (),
-            Err(_e) => return Err(SignalProtocolError::new_err("no session found"))
+            Err(_e) => return Err(SignalProtocolError::new_err("no session found")),
         };
 
         match session_state.unwrap().session_version() {
-            Ok(version)  => Ok(version),
-            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error"))
+            Ok(version) => Ok(version),
+            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error")),
         }
     }
 
@@ -132,16 +144,15 @@ impl SessionRecord {
 
         match session_state {
             Ok(session_state) => (),
-            Err(_e) => return Err(SignalProtocolError::new_err("no session found"))
+            Err(_e) => return Err(SignalProtocolError::new_err("no session found")),
         };
 
         match session_state.unwrap().alice_base_key() {
-            Ok(key)  => Ok(PyBytes::new(py, key).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("cannot get base key"))
+            Ok(key) => Ok(PyBytes::new(py, key).into()),
+            Err(_e) => Err(SignalProtocolError::new_err("cannot get base key")),
         }
     }
 }
-
 
 // Not exposed: SessionState.
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {

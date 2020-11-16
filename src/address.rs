@@ -1,5 +1,5 @@
-use pyo3::prelude::*;
 use pyo3::class::basic::PyObjectProtocol;
+use pyo3::prelude::*;
 
 use libsignal_protocol_rust;
 
@@ -30,11 +30,19 @@ impl ProtocolAddress {
 #[pyproto]
 impl PyObjectProtocol for ProtocolAddress {
     fn __str__(&self) -> PyResult<String> {
-        Ok(String::from(format!("{} {}", self.name(), self.device_id())))
+        Ok(String::from(format!(
+            "{} {}",
+            self.name(),
+            self.device_id()
+        )))
     }
 
     fn __repr__(&self) -> PyResult<String> {
-        Ok(String::from(format!("ProtocolAddress({}, {})", self.name(), self.device_id())))
+        Ok(String::from(format!(
+            "ProtocolAddress({}, {})",
+            self.name(),
+            self.device_id()
+        )))
     }
 }
 

@@ -1,20 +1,19 @@
+use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::pyclass::PyClassAlloc;
-use pyo3::wrap_pyfunction;
-use pyo3::exceptions;
 use pyo3::types::PyBytes;
+use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
 
 use libsignal_protocol_rust;
-use libsignal_protocol_rust::{SessionStore, IdentityKeyStore, PreKeyStore, SignedPreKeyStore};
+use libsignal_protocol_rust::{IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore};
 
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
 use crate::protocol::PreKeySignalMessage;
-use crate::state::{PreKeyId,PreKeyBundle,SessionRecord};
+use crate::state::{PreKeyBundle, PreKeyId, SessionRecord};
 use crate::storage::InMemSignalProtocolStore;
-
 
 #[pyfunction]
 pub fn process_prekey(
@@ -23,7 +22,6 @@ pub fn process_prekey(
     session_record: &mut SessionRecord,
     protocol_store: &mut InMemSignalProtocolStore,
 ) -> PyResult<Option<PreKeyId>> {
-
     let result = libsignal_protocol_rust::process_prekey(
         &message.data,
         &remote_address.state,
@@ -35,8 +33,10 @@ pub fn process_prekey(
     );
 
     match result {
-        Ok(prekey_id)  => Ok(prekey_id),
-        Err(_e) => Err(SignalProtocolError::new_err("error processing prekey bundle"))
+        Ok(prekey_id) => Ok(prekey_id),
+        Err(_e) => Err(SignalProtocolError::new_err(
+            "error processing prekey bundle",
+        )),
     }
 }
 
@@ -57,8 +57,10 @@ pub fn process_prekey_bundle(
     );
 
     match result {
-        Ok(())  => Ok(()),
-        Err(_e) => Err(SignalProtocolError::new_err("error processing prekey bundle"))
+        Ok(()) => Ok(()),
+        Err(_e) => Err(SignalProtocolError::new_err(
+            "error processing prekey bundle",
+        )),
     }
 }
 

@@ -32,18 +32,14 @@ impl KeyPair {
     fn new(public_key: PublicKey, private_key: PrivateKey) -> Self {
         let mut csprng = OsRng;
         let keypair = libsignal_protocol_rust::KeyPair::new(public_key.key, private_key.key);
-        KeyPair {
-            key: keypair,
-        }
+        KeyPair { key: keypair }
     }
 
     #[staticmethod]
     fn generate() -> Self {
         let mut csprng = OsRng;
         let keypair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
-        KeyPair {
-            key: keypair,
-        }
+        KeyPair { key: keypair }
     }
 
     pub fn public_key(&self, py: Python) -> PyResult<PublicKey> {
