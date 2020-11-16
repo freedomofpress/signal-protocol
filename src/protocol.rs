@@ -118,10 +118,16 @@ pub struct SignalMessage {
 
 #[pymethods]
 impl SignalMessage {
+    // convert::TryFrom
     #[staticmethod]
     pub fn try_from(py: Python, data: &[u8]) -> PyResult<PyObject> {
         match libsignal_protocol_rust::SignalMessage::try_from(data) {
-            Ok(inner) => Py::new(py, (CiphertextMessage{data: inner.clone()}, SignalMessage{data: inner})).map(Into::into),
+            Ok(inner) => Py::new(py,
+                    (SignalMessage{data: inner},
+                    CiphertextMessage{
+                        data: libsignal_protocol_rust::CiphertextMessage::SignalMessage(inner.clone())},
+                    )
+                ).map(Into::into),
             Err(_e) => return Err(SignalProtocolError::new_err(
                 "error processing SignalMessage data",
             )),
