@@ -214,6 +214,65 @@ impl SignedPreKeyRecord {
             ),
         }
     }
+
+    #[staticmethod]
+    fn deserialize(data: &[u8]) -> PyResult<Self> {
+        match libsignal_protocol_rust::SignedPreKeyRecord::deserialize(data) {
+            Ok(state) => Ok(SignedPreKeyRecord { state }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not deserialize to SignedPreKeyRecord",
+            )),
+        }
+    }
+
+    fn id(&self) -> PyResult<SignedPreKeyId> {
+        match self.state.id() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access ID")),
+        }
+    }
+
+    fn timestamp(&self) -> PyResult<u64> {
+        match self.state.timestamp() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access timestamp")),
+        }
+    }
+
+    fn signature(&self, py: Python) -> PyResult<PyObject> {
+        match self.state.signature() {
+            Ok(result) => Ok(PyBytes::new(py, &result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access signature")),
+        }
+    }
+
+    fn key_pair(&self) -> PyResult<KeyPair> {
+        match self.state.key_pair() {
+            Ok(key) => Ok(KeyPair { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access keypair")),
+        }
+    }
+
+    fn public_key(&self) -> PyResult<PublicKey> {
+        match self.state.public_key() {
+            Ok(key) => Ok(PublicKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access public key")),
+        }
+    }
+
+    fn private_key(&self) -> PyResult<PrivateKey> {
+        match self.state.private_key() {
+            Ok(key) => Ok(PrivateKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access private key")),
+        }
+    }
+
+    fn serialize(&self, py: Python) -> PyResult<PyObject> {
+        match self.state.serialize() {
+            Ok(result) => Ok(PyBytes::new(py, &result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err("could not serialize")),
+        }
+    }
 }
 
 #[pyclass]
