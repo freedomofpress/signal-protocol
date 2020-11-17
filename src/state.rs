@@ -56,6 +56,81 @@ impl PreKeyBundle {
             .unwrap(),
         })
     }
+
+    fn registration_id(&self) -> PyResult<u32> {
+        match self.state.registration_id() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not access registration ID",
+            )),
+        }
+    }
+
+    fn device_id(&self) -> PyResult<u32> {
+        match self.state.device_id() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access device ID")),
+        }
+    }
+
+    fn pre_key_id(&self) -> PyResult<Option<PreKeyId>> {
+        match self.state.pre_key_id() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access prekey ID")),
+        }
+    }
+
+    fn pre_key_public(&self) -> PyResult<Option<PublicKey>> {
+        let key = match self.state.pre_key_public() {
+            Ok(key) => key,
+            Err(_e) => {
+                return Err(SignalProtocolError::new_err(
+                    "could not access prekey public key",
+                ))
+            }
+        };
+
+        match key {
+            Some(key) => Ok(Some(PublicKey { key })),
+            None => Ok(None),
+        }
+    }
+
+    fn signed_pre_key_id(&self) -> PyResult<SignedPreKeyId> {
+        match self.state.signed_pre_key_id() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not access signed prekey ID",
+            )),
+        }
+    }
+
+    fn signed_pre_key_public(&self) -> PyResult<PublicKey> {
+        match self.state.signed_pre_key_public() {
+            Ok(key) => Ok(PublicKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not access signed prekey public key",
+            )),
+        }
+    }
+
+    fn signed_pre_key_signature(&self, py: Python) -> PyResult<PyObject> {
+        match self.state.signed_pre_key_signature() {
+            Ok(result) => Ok(PyBytes::new(py, result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not access signed prekey sig",
+            )),
+        }
+    }
+
+    fn identity_key(&self) -> PyResult<IdentityKey> {
+        match self.state.identity_key() {
+            Ok(key) => Ok(IdentityKey { key: *key }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not access identity key",
+            )),
+        }
+    }
 }
 
 #[pyclass]
