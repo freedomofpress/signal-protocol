@@ -5,7 +5,7 @@ use pyo3::wrap_pyfunction;
 
 use libsignal_protocol_rust;
 
-use crate::curve::{KeyPair, PublicKey};
+use crate::curve::{KeyPair, PrivateKey, PublicKey};
 use crate::identity_key::IdentityKey;
 
 use crate::error::SignalProtocolError;
@@ -147,6 +147,51 @@ impl PreKeyRecord {
             libsignal_protocol_rust::KeyPair::new(keypair.key.public_key, keypair.key.private_key);
         PreKeyRecord {
             state: libsignal_protocol_rust::PreKeyRecord::new(id, &key),
+        }
+    }
+
+    #[staticmethod]
+    fn deserialize(data: &[u8]) -> PyResult<Self> {
+        match libsignal_protocol_rust::PreKeyRecord::deserialize(data) {
+            Ok(state) => Ok(PreKeyRecord { state }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not deserialize to PreKeyRecord",
+            )),
+        }
+    }
+
+    fn id(&self) -> PyResult<PreKeyId> {
+        match self.state.id() {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access ID")),
+        }
+    }
+
+    fn key_pair(&self) -> PyResult<KeyPair> {
+        match self.state.key_pair() {
+            Ok(key) => Ok(KeyPair { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access keypair")),
+        }
+    }
+
+    fn public_key(&self) -> PyResult<PublicKey> {
+        match self.state.public_key() {
+            Ok(key) => Ok(PublicKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access public key")),
+        }
+    }
+
+    fn private_key(&self) -> PyResult<PrivateKey> {
+        match self.state.private_key() {
+            Ok(key) => Ok(PrivateKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not access private key")),
+        }
+    }
+
+    fn serialize(&self, py: Python) -> PyResult<PyObject> {
+        match self.state.serialize() {
+            Ok(result) => Ok(PyBytes::new(py, &result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err("could not serialize")),
         }
     }
 }
