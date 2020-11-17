@@ -180,14 +180,31 @@ pub fn initialize_bob_session(parameters: &BobSignalProtocolParameters) -> PyRes
     }
 }
 
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct RootKey {
+    pub key: libsignal_protocol_rust::RootKey,
+}
+
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct ChainKey {
+    pub key: libsignal_protocol_rust::ChainKey,
+}
+
+#[pyclass]
+pub struct MessageKeys {
+    pub key: libsignal_protocol_rust::MessageKeys,
+}
+
 /// fn are_we_alice is not exposed as part of the Python API.
-///
-/// In ratchet/keys.rs in the upstream crate, MessageKeys, ChainKey, RootKey are
-/// exposed, but we do not expose them as part of the Python API.
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<AliceSignalProtocolParameters>()?;
     module.add_wrapped(wrap_pyfunction!(initialize_alice_session))?;
     module.add_class::<BobSignalProtocolParameters>()?;
     module.add_wrapped(wrap_pyfunction!(initialize_bob_session))?;
+    module.add_class::<RootKey>()?;
+    module.add_class::<MessageKeys>()?;
+    module.add_class::<ChainKey>()?;
     Ok(())
 }
