@@ -183,11 +183,10 @@ pub fn verify_signature(
     message: &[u8],
     signature: &[u8],
 ) -> PyResult<bool> {
-    let libsig_public_key =
-        libsignal_protocol_rust::PublicKey::deserialize(&public_key.key.serialize()).unwrap();
-    Ok(libsig_public_key
-        .verify_signature(message, signature)
-        .unwrap())
+    match public_key.verify_signature(message, signature) {
+        Ok(result) => Ok(result),
+        Err(_e) => Err(SignalProtocolError::new_err("could not check signature")),
+    }
 }
 
 /// KeyType is not exposed as part of the Python API.

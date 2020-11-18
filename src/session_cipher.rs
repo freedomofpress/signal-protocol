@@ -29,7 +29,10 @@ pub fn message_encrypt(
         None,
     );
 
-    Ok(CiphertextMessage::new(ciphertext.unwrap()))
+    match ciphertext {
+        Ok(result) => Ok(CiphertextMessage::new(result)),
+        Err(_e) => Err(SignalProtocolError::new_err("unknown encryption error")),
+    }
 }
 
 #[pyfunction]

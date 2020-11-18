@@ -1,3 +1,4 @@
+use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
@@ -21,13 +22,10 @@ pub struct InMemSignalProtocolStore {
 impl InMemSignalProtocolStore {
     #[new]
     fn new(key_pair: &IdentityKeyPair, registration_id: u32) -> PyResult<InMemSignalProtocolStore> {
-        Ok(Self {
-            store: libsignal_protocol_rust::InMemSignalProtocolStore::new(
-                key_pair.key,
-                registration_id,
-            )
-            .unwrap(),
-        })
+        match libsignal_protocol_rust::InMemSignalProtocolStore::new(key_pair.key, registration_id) {
+            Ok(store) => Ok(Self { store }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not create InMemSignalProtocolStore")),
+        }
     }
 }
 
@@ -35,20 +33,17 @@ impl InMemSignalProtocolStore {
 #[pymethods]
 impl InMemSignalProtocolStore {
     fn get_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
-        let result = self
-            .store
-            .identity_store
-            .get_identity_key_pair(None)
-            .unwrap();
-        Ok(IdentityKeyPair { key: result })
+        match self.store.identity_store.get_identity_key_pair(None) {
+            Ok(key) => Ok(IdentityKeyPair{ key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not get identity key pair")),
+        }
     }
 
     fn get_local_registration_id(&self) -> PyResult<u32> {
-        Ok(self
-            .store
-            .identity_store
-            .get_local_registration_id(None)
-            .unwrap())
+        match self.store.identity_store.get_local_registration_id(None) {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not get local registration ID")),
+        }
     }
 
     fn save_identity(
@@ -56,11 +51,10 @@ impl InMemSignalProtocolStore {
         address: &ProtocolAddress,
         identity: &IdentityKey,
     ) -> PyResult<bool> {
-        Ok(self
-            .store
-            .identity_store
-            .save_identity(&address.state, &identity.key, None)
-            .unwrap())
+        match self.store.identity_store.save_identity(&address.state, &identity.key, None) {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("could not save identity")),
+        }
     }
 
     // fn is_trusted_identity(
@@ -83,7 +77,12 @@ impl InMemSignalProtocolStore {
 #[pymethods]
 impl InMemSignalProtocolStore {
     pub fn load_session(&self, address: &ProtocolAddress) -> PyResult<Option<SessionRecord>> {
-        match self.store.load_session(&address.state, None).unwrap() {
+        let session = match self.store.load_session(&address.state, None) {
+            Ok(session) => session,
+            Err(_e) => return Err(SignalProtocolError::new_err("could not load session")),
+        };
+
+        match session {
             None => Ok(None),
             Some(session) => Ok(Some(SessionRecord { state: session })),
         }
@@ -152,6 +151,7 @@ impl InMemSignalProtocolStore {
     }
 }
 
+/// The storage traits are not exposed as part of the API (this is not supported by Pyo3)
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<InMemSignalProtocolStore>()?;
     Ok(())

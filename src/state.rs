@@ -42,19 +42,19 @@ impl PreKeyBundle {
         let signed_pre_key = signed_pre_key_public.key;
         let identity_key_direct = identity_key.key;
 
-        Ok(PreKeyBundle {
-            state: libsignal_protocol_rust::PreKeyBundle::new(
-                registration_id,
-                device_id,
-                pre_key_id,
-                pre_key,
-                signed_pre_key_id,
-                signed_pre_key,
-                signed_pre_key_signature,
-                identity_key_direct,
-            )
-            .unwrap(),
-        })
+        match libsignal_protocol_rust::PreKeyBundle::new(
+            registration_id,
+            device_id,
+            pre_key_id,
+            pre_key,
+            signed_pre_key_id,
+            signed_pre_key,
+            signed_pre_key_signature,
+            identity_key_direct,
+        ) {
+            Ok(state) => Ok(PreKeyBundle { state }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not create PreKeyBundle"))
+        }
     }
 
     fn registration_id(&self) -> PyResult<u32> {
