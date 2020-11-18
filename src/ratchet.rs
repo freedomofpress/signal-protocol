@@ -1,11 +1,12 @@
 use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::pyclass::PyClassAlloc;
+use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
 
-use crate::curve::{KeyPair, PublicKey};
+use crate::curve::{KeyPair, PrivateKey, PublicKey};
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::state::SessionRecord;
@@ -173,10 +174,9 @@ impl BobSignalProtocolParameters {
 
 #[pyfunction]
 pub fn initialize_bob_session(parameters: &BobSignalProtocolParameters) -> PyResult<SessionRecord> {
-    let session_state = libsignal_protocol_rust::initialize_bob_session(&parameters.inner);
-    match session_state {
+    match libsignal_protocol_rust::initialize_bob_session(&parameters.inner) {
         Ok(state) => Ok(SessionRecord::new(state)),
-        Err(_e) => return Err(SignalProtocolError::new_err("could not create session")),
+        Err(_e) => Err(SignalProtocolError::new_err("could not create session")),
     }
 }
 
@@ -186,15 +186,88 @@ pub struct RootKey {
     pub key: libsignal_protocol_rust::RootKey,
 }
 
+/// The new() methods are not exposed for RootKey.
+#[pymethods]
+impl RootKey {
+    pub fn key(&self, py: Python) -> PyObject {
+        PyBytes::new(py, self.key.key()).into()
+    }
+
+    pub fn create_chain(
+        &self,
+        py: Python,
+        their_ratchet_key: &PublicKey,
+        our_ratchet_key: &PrivateKey,
+    ) -> PyResult<(RootKey, ChainKey)> {
+        match self
+            .key
+            .create_chain(&their_ratchet_key.key, &our_ratchet_key.key)
+        {
+            Ok(result) => Ok((RootKey { key: result.0 }, ChainKey { key: result.1 })),
+            Err(_e) => Err(SignalProtocolError::new_err("could not create chain")),
+        }
+    }
+}
+
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct ChainKey {
     pub key: libsignal_protocol_rust::ChainKey,
 }
 
+/// The new() methods are not exposed for ChainKey.
+#[pymethods]
+impl ChainKey {
+    pub fn key(&self, py: Python) -> PyObject {
+        PyBytes::new(py, self.key.key()).into()
+    }
+
+    pub fn index(&self) -> u32 {
+        self.key.index()
+    }
+
+    pub fn next_chain_key(&self) -> PyResult<Self> {
+        match self.key.next_chain_key() {
+            Ok(key) => Ok(ChainKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not compute next chain key",
+            )),
+        }
+    }
+
+    pub fn message_keys(&self) -> PyResult<MessageKeys> {
+        match self.key.message_keys() {
+            Ok(key) => Ok(MessageKeys { key }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not compute message keys",
+            )),
+        }
+    }
+}
+
 #[pyclass]
 pub struct MessageKeys {
     pub key: libsignal_protocol_rust::MessageKeys,
+}
+
+/// The derive_keys() and new() methods are not exposed for MessageKeys.
+#[pymethods]
+impl MessageKeys {
+    pub fn cipher_key(&self, py: Python) -> PyObject {
+        PyBytes::new(py, self.key.cipher_key()).into()
+    }
+
+    pub fn mac_key(&self, py: Python) -> PyObject {
+        PyBytes::new(py, self.key.mac_key()).into()
+    }
+
+    pub fn iv(&self, py: Python) -> PyObject {
+        PyBytes::new(py, self.key.iv()).into()
+    }
+
+    pub fn counter(&self) -> u32 {
+        self.key.counter()
+    }
 }
 
 /// fn are_we_alice is not exposed as part of the Python API.
