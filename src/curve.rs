@@ -1,3 +1,4 @@
+use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
@@ -6,20 +7,19 @@ use rand::rngs::OsRng;
 
 use libsignal_protocol_rust;
 
+use crate::error::SignalProtocolError;
+
 #[pyfunction]
-pub fn generate_keypair() -> PyResult<(Vec<u8>, Vec<u8>)> {
+pub fn generate_keypair(py: Python) -> PyResult<(PyObject, PyObject)> {
     let mut csprng = OsRng;
     let key_pair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
 
     Ok((
-        key_pair.public_key.serialize().to_vec(),
-        key_pair.private_key.serialize().to_vec(),
+        PyBytes::new(py, &key_pair.public_key.serialize()).into(),
+        PyBytes::new(py, &key_pair.private_key.serialize()).into(),
     ))
 }
 
-/// Methods from libsignal-protocol-rust not implemented:
-/// from_public_and_private, calculate_signature,
-/// calculate_agreement
 #[pyclass]
 #[derive(Clone)]
 pub struct KeyPair {
@@ -43,17 +43,48 @@ impl KeyPair {
     }
 
     pub fn public_key(&self, py: Python) -> PyResult<PublicKey> {
-        let public_key = PublicKey::deserialize(&self.key.public_key.serialize()).unwrap();
-        Ok(public_key)
+        match PublicKey::deserialize(&self.key.public_key.serialize()) {
+            Ok(public_key) => Ok(public_key),
+            Err(_e) => Err(SignalProtocolError::new_err("error getting PublicKey")),
+        }
     }
 
     pub fn private_key(&self, py: Python) -> PyResult<PrivateKey> {
-        let private_key = PrivateKey::deserialize(&self.key.private_key.serialize()).unwrap();
-        Ok(private_key)
+        match PrivateKey::deserialize(&self.key.private_key.serialize()) {
+            Ok(private_key) => Ok(private_key),
+            Err(_e) => Err(SignalProtocolError::new_err("error getting PrivateKey")),
+        }
     }
 
     pub fn serialize(&self, py: Python) -> PyResult<PyObject> {
         Ok(PyBytes::new(py, &self.key.public_key.serialize()).into())
+    }
+
+    pub fn calculate_signature(&self, py: Python, message: &[u8]) -> PyResult<PyObject> {
+        let mut csprng = OsRng;
+        match self.key.calculate_signature(&message, &mut csprng) {
+            Ok(result) => Ok(PyBytes::new(py, &result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err("error calculating signature")),
+        }
+    }
+
+    pub fn calculate_agreement(&self, py: Python, their_key: &PublicKey) -> PyResult<PyObject> {
+        match self.key.calculate_agreement(&their_key.key) {
+            Ok(result) => Ok(PyBytes::new(py, &result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not calculate keypair agreement",
+            )),
+        }
+    }
+
+    #[staticmethod]
+    pub fn from_public_and_private(public_key: &[u8], private_key: &[u8]) -> PyResult<Self> {
+        match libsignal_protocol_rust::KeyPair::from_public_and_private(public_key, private_key) {
+            Ok(key) => Ok(KeyPair { key }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not create KeyPair object",
+            )),
+        }
     }
 }
 
@@ -69,22 +100,31 @@ impl PublicKey {
     }
 }
 
+/// key_type is not implemented for PublicKey.
 #[pymethods]
 impl PublicKey {
     #[staticmethod]
     pub fn deserialize(key: &[u8]) -> PyResult<Self> {
-        Ok(Self {
-            key: libsignal_protocol_rust::PublicKey::deserialize(key).unwrap(),
-        })
+        match libsignal_protocol_rust::PublicKey::deserialize(key) {
+            Ok(key) => Ok(Self { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not deserialize")),
+        }
     }
 
-    pub fn serialize(&self, py: Python) -> PyResult<PyObject> {
-        Ok(PyBytes::new(py, &self.key.serialize()).into())
+    pub fn serialize(&self, py: Python) -> PyObject {
+        PyBytes::new(py, &self.key.serialize()).into()
+    }
+
+    pub fn verify_signature(&self, message: &[u8], signature: &[u8]) -> PyResult<bool> {
+        match self.key.verify_signature(&message, &signature) {
+            Ok(result) => Ok(result),
+            Err(_e) => Err(SignalProtocolError::new_err("error verifying signature")),
+        }
     }
 }
 
 #[pyclass]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct PrivateKey {
     pub key: libsignal_protocol_rust::PrivateKey,
 }
@@ -95,19 +135,45 @@ impl PrivateKey {
     }
 }
 
+/// key_type() is not implemented on this struct.
 #[pymethods]
 impl PrivateKey {
     #[staticmethod]
     pub fn deserialize(key: &[u8]) -> PyResult<Self> {
-        Ok(Self {
-            key: libsignal_protocol_rust::PrivateKey::deserialize(key).unwrap(),
-        })
+        match libsignal_protocol_rust::PrivateKey::deserialize(key) {
+            Ok(key) => Ok(Self { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not deserialize")),
+        }
+    }
+
+    pub fn serialize(&self, py: Python) -> PyObject {
+        PyBytes::new(py, &self.key.serialize()).into()
     }
 
     pub fn calculate_signature(&self, message: &[u8], py: Python) -> PyResult<PyObject> {
         let mut csprng = OsRng;
-        let sig = self.key.calculate_signature(message, &mut csprng).unwrap();
-        Ok(PyBytes::new(py, &sig).into())
+        match self.key.calculate_signature(message, &mut csprng) {
+            Ok(sig) => Ok(PyBytes::new(py, &sig).into()),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not calculate signature",
+            )),
+        }
+    }
+
+    pub fn calculate_agreement(&self, py: Python, their_key: &PublicKey) -> PyResult<PyObject> {
+        match self.key.calculate_agreement(&their_key.key) {
+            Ok(result) => Ok(PyBytes::new(py, &result).into()),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not calculate agreement",
+            )),
+        }
+    }
+
+    pub fn public_key(&self) -> PyResult<PublicKey> {
+        match self.key.public_key() {
+            Ok(key) => Ok(PublicKey { key }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not get public key")),
+        }
     }
 }
 
