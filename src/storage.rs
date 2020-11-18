@@ -14,6 +14,7 @@ use libsignal_protocol_rust;
 use libsignal_protocol_rust::{IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore};
 
 #[pyclass]
+#[derive(Clone)]
 pub struct InMemSignalProtocolStore {
     pub store: libsignal_protocol_rust::InMemSignalProtocolStore,
 }
@@ -22,27 +23,35 @@ pub struct InMemSignalProtocolStore {
 impl InMemSignalProtocolStore {
     #[new]
     fn new(key_pair: &IdentityKeyPair, registration_id: u32) -> PyResult<InMemSignalProtocolStore> {
-        match libsignal_protocol_rust::InMemSignalProtocolStore::new(key_pair.key, registration_id) {
+        match libsignal_protocol_rust::InMemSignalProtocolStore::new(key_pair.key, registration_id)
+        {
             Ok(store) => Ok(Self { store }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not create InMemSignalProtocolStore")),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not create InMemSignalProtocolStore",
+            )),
         }
     }
 }
 
 /// libsignal_protocol_rust::IdentityKeyStore
+/// is_trusted_identity is not implemented (it requries traits::Direction as arg)
 #[pymethods]
 impl InMemSignalProtocolStore {
     fn get_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
         match self.store.identity_store.get_identity_key_pair(None) {
-            Ok(key) => Ok(IdentityKeyPair{ key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get identity key pair")),
+            Ok(key) => Ok(IdentityKeyPair { key }),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not get identity key pair",
+            )),
         }
     }
 
     fn get_local_registration_id(&self) -> PyResult<u32> {
         match self.store.identity_store.get_local_registration_id(None) {
             Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get local registration ID")),
+            Err(_e) => Err(SignalProtocolError::new_err(
+                "could not get local registration ID",
+            )),
         }
     }
 
@@ -51,26 +60,27 @@ impl InMemSignalProtocolStore {
         address: &ProtocolAddress,
         identity: &IdentityKey,
     ) -> PyResult<bool> {
-        match self.store.identity_store.save_identity(&address.state, &identity.key, None) {
+        match self
+            .store
+            .identity_store
+            .save_identity(&address.state, &identity.key, None)
+        {
             Ok(result) => Ok(result),
             Err(_e) => Err(SignalProtocolError::new_err("could not save identity")),
         }
     }
 
-    // fn is_trusted_identity(
-    //     &self,
-    //     address: &ProtocolAddress,
-    //     identity: &IdentityKey,
-    //     direction: traits::Direction,
-    //     ctx: Context,
-    // ) -> Result<bool> {
-    //     self.identity_store
-    //         .is_trusted_identity(address, identity, direction, ctx)
-    // }
+    fn get_identity(&self, address: &ProtocolAddress) -> PyResult<Option<IdentityKey>> {
+        let key = match self.store.identity_store.get_identity(&address.state, None) {
+            Ok(key) => key,
+            Err(_e) => return Err(SignalProtocolError::new_err("could not get identity")),
+        };
 
-    // fn get_identity(&self, address: &ProtocolAddress, ctx: Context) -> Result<Option<IdentityKey>> {
-    //     self.identity_store.get_identity(address, ctx)
-    // }
+        match key {
+            Some(key) => Ok(Some(IdentityKey { key })),
+            None => Ok(None),
+        }
+    }
 }
 
 /// libsignal_protocol_rust::SessionStore
@@ -84,7 +94,7 @@ impl InMemSignalProtocolStore {
 
         match session {
             None => Ok(None),
-            Some(session) => Ok(Some(SessionRecord { state: session })),
+            Some(state) => Ok(Some(SessionRecord { state })),
         }
     }
 
@@ -93,7 +103,7 @@ impl InMemSignalProtocolStore {
             .store
             .store_session(&address.state, &record.state, None)
         {
-            Ok(result) => Ok(result),
+            Ok(()) => Ok(()),
             Err(_e) => Err(SignalProtocolError::new_err("could not store session")),
         }
     }
@@ -120,21 +130,23 @@ impl InMemSignalProtocolStore {
         }
     }
 
-    // fn remove_pre_key(&mut self, id: PreKeyId, ctx: Context) -> Result<()> {
-    //     self.pre_key_store.remove_pre_key(id, ctx)
-    // }
+    fn remove_pre_key(&mut self, id: PreKeyId) -> PyResult<()> {
+        match self.store.pre_key_store.remove_pre_key(id, None) {
+            Ok(()) => Ok(()),
+            Err(_e) => Err(SignalProtocolError::new_err("could not remove prekey")),
+        }
+    }
 }
 
 /// libsignal_protocol_rust::SignedPreKeyStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    // fn get_signed_pre_key(&self, id: SignedPreKeyId, _ctx: Context) -> Result<SignedPreKeyRecord> {
-    //     Ok(self
-    //         .signed_pre_keys
-    //         .get(&id)
-    //         .ok_or(SignalProtocolError::InvalidSignedPreKeyId)?
-    //         .clone())
-    // }
+    fn get_signed_pre_key(&self, id: SignedPreKeyId) -> PyResult<SignedPreKeyRecord> {
+        match self.store.get_signed_pre_key(id, None) {
+            Ok(state) => Ok(SignedPreKeyRecord { state }),
+            Err(_e) => Err(SignalProtocolError::new_err("could not get signed prekey")),
+        }
+    }
 
     fn save_signed_pre_key(
         &mut self,
@@ -145,13 +157,17 @@ impl InMemSignalProtocolStore {
             .store
             .save_signed_pre_key(id, &record.state.to_owned(), None)
         {
-            Ok(_result) => Ok(()),
+            Ok(()) => Ok(()),
             Err(_e) => Err(SignalProtocolError::new_err("could not save signed prekey")),
         }
     }
 }
 
 /// The storage traits are not exposed as part of the API (this is not supported by Pyo3)
+///
+/// Python classes for InMemSenderKeyStore, InMemSessionStore, InMemIdentityKeyStore, InMemPreKeyStore
+/// or InMemSignedPreKeyStore are not exposed.
+/// One will need to operate on the InMemSignalProtocolStore instead.
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<InMemSignalProtocolStore>()?;
     Ok(())
