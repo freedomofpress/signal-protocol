@@ -2,10 +2,10 @@ use std::convert::TryFrom;
 
 use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::pyclass::PyClassAlloc;
 use pyo3::types::PyBytes;
 
 use rand::rngs::OsRng;
+use std::convert;
 
 use libsignal_protocol_rust;
 
@@ -26,15 +26,12 @@ impl IdentityKey {
     pub fn new(public_key: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::IdentityKey::try_from(public_key) {
             Ok(key) => Ok(Self { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not create IdentityKey")),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
-    pub fn public_key(&self, py: Python) -> PyResult<PublicKey> {
-        match PublicKey::deserialize(&self.key.public_key().serialize()) {
-            Ok(key) => Ok(key),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get public key")),
-        }
+    pub fn public_key(&self, py: Python) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey::deserialize(&self.key.public_key().serialize())?)
     }
 
     pub fn serialize(&self, py: Python) -> PyObject {
@@ -54,7 +51,7 @@ impl IdentityKeyPair {
     pub fn new(identity_key_pair_bytes: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::IdentityKeyPair::try_from(identity_key_pair_bytes) {
             Ok(key) => Ok(Self { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not create IdentityKeyPair")),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
@@ -68,22 +65,18 @@ impl IdentityKeyPair {
     pub fn identity_key(&self) -> PyResult<IdentityKey> {
         match IdentityKey::new(&self.key.public_key().serialize()) {
             Ok(key) => Ok(key),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get IdentityKey")),
+            Err(err) => Err(err),
         }
     }
 
-    pub fn public_key(&self) -> PyResult<PublicKey> {
-        match PublicKey::deserialize(&self.key.public_key().serialize()) {
-            Ok(key) => Ok(key),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get PublicKey")),
-        }
+    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey::deserialize(&self.key.public_key().serialize())?)
     }
 
-    pub fn private_key(&self) -> PyResult<PrivateKey> {
-        match PrivateKey::deserialize(&self.key.private_key().serialize()) {
-            Ok(key) => Ok(key),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get PrivateKey")),
-        }
+    pub fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+        Ok(PrivateKey::deserialize(
+            &self.key.private_key().serialize(),
+        )?)
     }
 
     pub fn serialize(&self, py: Python) -> PyObject {

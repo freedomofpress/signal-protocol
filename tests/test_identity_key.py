@@ -19,7 +19,11 @@ def test_identity_key_pair_from_bytes():
     test_keypair_serialized = test_keypair.serialize()
 
     decoded_keypair = identity_key.IdentityKeyPair(test_keypair_serialized)
-    assert decoded_keypair.public_key().serialize() == test_keypair.public_key().serialize()
     assert (
-        decoded_keypair.private_key().serialize() == test_keypair.private_key().serialize()
+        decoded_keypair.public_key().serialize()
+        == test_keypair.public_key().serialize()
+    )
+    assert (
+        decoded_keypair.private_key().serialize()
+        == test_keypair.private_key().serialize()
     )

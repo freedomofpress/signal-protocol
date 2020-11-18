@@ -1,10 +1,9 @@
 use std::convert::TryFrom;
 
+use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::pyclass::PyClassAlloc;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
-use pyo3::exceptions;
 
 use rand::rngs::OsRng;
 
@@ -16,12 +15,12 @@ use crate::storage::InMemSignalProtocolStore;
 
 #[pyclass]
 pub struct CiphertextMessage {
-    pub data: libsignal_protocol_rust::CiphertextMessage
+    pub data: libsignal_protocol_rust::CiphertextMessage,
 }
 
 impl CiphertextMessage {
     pub fn new(data: libsignal_protocol_rust::CiphertextMessage) -> Self {
-        CiphertextMessage{ data }
+        CiphertextMessage { data }
     }
 }
 
@@ -44,7 +43,7 @@ impl CiphertextMessage {
 /// CiphertextMessageType::PreKey => 3
 #[pyclass]
 pub struct PreKeySignalMessage {
-    pub data: libsignal_protocol_rust::PreKeySignalMessage
+    pub data: libsignal_protocol_rust::PreKeySignalMessage,
 }
 
 /// Rust enums cannot be mapped to Python enums in PyO3. This means
@@ -59,7 +58,11 @@ pub struct PreKeySignalMessage {
 impl PreKeySignalMessage {
     #[staticmethod]
     pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
-        Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::PreKeySignalMessage(libsignal_protocol_rust::PreKeySignalMessage::try_from(data).unwrap()) })
+        Ok(CiphertextMessage {
+            data: libsignal_protocol_rust::CiphertextMessage::PreKeySignalMessage(
+                libsignal_protocol_rust::PreKeySignalMessage::try_from(data).unwrap(),
+            ),
+        })
     }
 
     pub fn serialized(&self, py: Python) -> PyResult<PyObject> {
@@ -70,42 +73,54 @@ impl PreKeySignalMessage {
 /// CiphertextMessageType::Whisper
 #[pyclass]
 pub struct SignalMessage {
-    pub data: libsignal_protocol_rust::SignalMessage
+    pub data: libsignal_protocol_rust::SignalMessage,
 }
 
 #[pymethods]
 impl SignalMessage {
     #[staticmethod]
     pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
-        Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::SignalMessage(libsignal_protocol_rust::SignalMessage::try_from(data).unwrap()) })
+        Ok(CiphertextMessage {
+            data: libsignal_protocol_rust::CiphertextMessage::SignalMessage(
+                libsignal_protocol_rust::SignalMessage::try_from(data).unwrap(),
+            ),
+        })
     }
 }
 
 /// CiphertextMessageType::SenderKey => 4
 #[pyclass]
 pub struct SenderKeyMessage {
-    pub data: libsignal_protocol_rust::SenderKeyMessage
+    pub data: libsignal_protocol_rust::SenderKeyMessage,
 }
 
 #[pymethods]
 impl SenderKeyMessage {
     #[staticmethod]
     pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
-        Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::SenderKeyMessage(libsignal_protocol_rust::SenderKeyMessage::try_from(data).unwrap()) })
+        Ok(CiphertextMessage {
+            data: libsignal_protocol_rust::CiphertextMessage::SenderKeyMessage(
+                libsignal_protocol_rust::SenderKeyMessage::try_from(data).unwrap(),
+            ),
+        })
     }
 }
 
 /// CiphertextMessageType::SenderKeyDistribution => 5
 #[pyclass]
 pub struct SenderKeyDistributionMessage {
-    pub data: libsignal_protocol_rust::SenderKeyDistributionMessage
+    pub data: libsignal_protocol_rust::SenderKeyDistributionMessage,
 }
 
 #[pymethods]
 impl SenderKeyDistributionMessage {
     #[staticmethod]
     pub fn try_from(data: &[u8]) -> PyResult<CiphertextMessage> {
-        Ok(CiphertextMessage{ data: libsignal_protocol_rust::CiphertextMessage::SenderKeyDistributionMessage(libsignal_protocol_rust::SenderKeyDistributionMessage::try_from(data).unwrap()) })
+        Ok(CiphertextMessage {
+            data: libsignal_protocol_rust::CiphertextMessage::SenderKeyDistributionMessage(
+                libsignal_protocol_rust::SenderKeyDistributionMessage::try_from(data).unwrap(),
+            ),
+        })
     }
 }
 

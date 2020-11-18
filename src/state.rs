@@ -53,83 +53,49 @@ impl PreKeyBundle {
             identity_key_direct,
         ) {
             Ok(state) => Ok(PreKeyBundle { state }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not create PreKeyBundle"))
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
-    fn registration_id(&self) -> PyResult<u32> {
-        match self.state.registration_id() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access registration ID",
-            )),
-        }
+    fn registration_id(&self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.registration_id()?)
     }
 
-    fn device_id(&self) -> PyResult<u32> {
-        match self.state.device_id() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access device ID")),
-        }
+    fn device_id(&self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.device_id()?)
     }
 
-    fn pre_key_id(&self) -> PyResult<Option<PreKeyId>> {
-        match self.state.pre_key_id() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access prekey ID")),
-        }
+    fn pre_key_id(&self) -> Result<Option<PreKeyId>, SignalProtocolError> {
+        Ok(self.state.pre_key_id()?)
     }
 
-    fn pre_key_public(&self) -> PyResult<Option<PublicKey>> {
-        let key = match self.state.pre_key_public() {
-            Ok(key) => key,
-            Err(_e) => {
-                return Err(SignalProtocolError::new_err(
-                    "could not access prekey public key",
-                ))
-            }
-        };
-
+    fn pre_key_public(&self) -> Result<Option<PublicKey>, SignalProtocolError> {
+        let key = self.state.pre_key_public()?;
         match key {
             Some(key) => Ok(Some(PublicKey { key })),
             None => Ok(None),
         }
     }
 
-    fn signed_pre_key_id(&self) -> PyResult<SignedPreKeyId> {
-        match self.state.signed_pre_key_id() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access signed prekey ID",
-            )),
-        }
+    fn signed_pre_key_id(&self) -> Result<SignedPreKeyId, SignalProtocolError> {
+        Ok(self.state.signed_pre_key_id()?)
     }
 
-    fn signed_pre_key_public(&self) -> PyResult<PublicKey> {
-        match self.state.signed_pre_key_public() {
-            Ok(key) => Ok(PublicKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access signed prekey public key",
-            )),
-        }
+    fn signed_pre_key_public(&self) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey {
+            key: self.state.signed_pre_key_public()?,
+        })
     }
 
-    fn signed_pre_key_signature(&self, py: Python) -> PyResult<PyObject> {
-        match self.state.signed_pre_key_signature() {
-            Ok(result) => Ok(PyBytes::new(py, result).into()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access signed prekey sig",
-            )),
-        }
+    fn signed_pre_key_signature(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.state.signed_pre_key_signature()?;
+        Ok(PyBytes::new(py, result).into())
     }
 
-    fn identity_key(&self) -> PyResult<IdentityKey> {
-        match self.state.identity_key() {
-            Ok(key) => Ok(IdentityKey { key: *key }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access identity key",
-            )),
-        }
+    fn identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
+        Ok(IdentityKey {
+            key: *self.state.identity_key()?,
+        })
     }
 }
 
@@ -154,45 +120,35 @@ impl PreKeyRecord {
     fn deserialize(data: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::PreKeyRecord::deserialize(data) {
             Ok(state) => Ok(PreKeyRecord { state }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not deserialize to PreKeyRecord",
-            )),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
-    fn id(&self) -> PyResult<PreKeyId> {
-        match self.state.id() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access ID")),
-        }
+    fn id(&self) -> Result<PreKeyId, SignalProtocolError> {
+        Ok(self.state.id()?)
     }
 
-    fn key_pair(&self) -> PyResult<KeyPair> {
-        match self.state.key_pair() {
-            Ok(key) => Ok(KeyPair { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access keypair")),
-        }
+    fn key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+        Ok(KeyPair {
+            key: self.state.key_pair()?,
+        })
     }
 
-    fn public_key(&self) -> PyResult<PublicKey> {
-        match self.state.public_key() {
-            Ok(key) => Ok(PublicKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access public key")),
-        }
+    fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey {
+            key: self.state.public_key()?,
+        })
     }
 
-    fn private_key(&self) -> PyResult<PrivateKey> {
-        match self.state.private_key() {
-            Ok(key) => Ok(PrivateKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access private key")),
-        }
+    fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+        Ok(PrivateKey {
+            key: self.state.private_key()?,
+        })
     }
 
-    fn serialize(&self, py: Python) -> PyResult<PyObject> {
-        match self.state.serialize() {
-            Ok(result) => Ok(PyBytes::new(py, &result).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not serialize")),
-        }
+    fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.state.serialize()?;
+        Ok(PyBytes::new(py, &result).into())
     }
 }
 
@@ -219,59 +175,44 @@ impl SignedPreKeyRecord {
     fn deserialize(data: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::SignedPreKeyRecord::deserialize(data) {
             Ok(state) => Ok(SignedPreKeyRecord { state }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not deserialize to SignedPreKeyRecord",
-            )),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
-    fn id(&self) -> PyResult<SignedPreKeyId> {
-        match self.state.id() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access ID")),
-        }
+    fn id(&self) -> Result<SignedPreKeyId, SignalProtocolError> {
+        Ok(self.state.id()?)
     }
 
-    fn timestamp(&self) -> PyResult<u64> {
-        match self.state.timestamp() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access timestamp")),
-        }
+    fn timestamp(&self) -> Result<u64, SignalProtocolError> {
+        Ok(self.state.timestamp()?)
     }
 
-    fn signature(&self, py: Python) -> PyResult<PyObject> {
-        match self.state.signature() {
-            Ok(result) => Ok(PyBytes::new(py, &result).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access signature")),
-        }
+    fn signature(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let sig = self.state.signature()?;
+        Ok(PyBytes::new(py, &sig).into())
     }
 
-    fn key_pair(&self) -> PyResult<KeyPair> {
-        match self.state.key_pair() {
-            Ok(key) => Ok(KeyPair { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access keypair")),
-        }
+    fn key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+        Ok(KeyPair {
+            key: self.state.key_pair()?,
+        })
     }
 
-    fn public_key(&self) -> PyResult<PublicKey> {
-        match self.state.public_key() {
-            Ok(key) => Ok(PublicKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access public key")),
-        }
+    fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey {
+            key: self.state.public_key()?,
+        })
     }
 
-    fn private_key(&self) -> PyResult<PrivateKey> {
-        match self.state.private_key() {
-            Ok(key) => Ok(PrivateKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not access private key")),
-        }
+    fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+        Ok(PrivateKey {
+            key: self.state.private_key()?,
+        })
     }
 
-    fn serialize(&self, py: Python) -> PyResult<PyObject> {
-        match self.state.serialize() {
-            Ok(result) => Ok(PyBytes::new(py, &result).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not serialize")),
-        }
+    fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.state.serialize()?;
+        Ok(PyBytes::new(py, &result).into())
     }
 }
 
@@ -294,178 +235,128 @@ impl SessionState {
     fn deserialize(data: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::SessionState::deserialize(data) {
             Ok(state) => Ok(SessionState { state }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not deserialize to SessionState",
-            )),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
-    pub fn session_version(&self) -> PyResult<u32> {
-        match self.state.session_version() {
-            Ok(version) => Ok(version),
-            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error")),
-        }
+    pub fn session_version(&self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.session_version()?)
     }
 
-    pub fn alice_base_key(&self, py: Python) -> PyResult<PyObject> {
-        match self.state.alice_base_key() {
-            Ok(key) => Ok(PyBytes::new(py, key).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("cannot get base key")),
-        }
+    pub fn alice_base_key(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let key = self.state.alice_base_key()?;
+        Ok(PyBytes::new(py, key).into())
     }
 
-    pub fn set_alice_base_key(&mut self, key: &[u8]) -> PyResult<()> {
-        match self.state.set_alice_base_key(key) {
-            Ok(_) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("cannot set base key")),
-        }
+    pub fn set_alice_base_key(&mut self, key: &[u8]) -> Result<(), SignalProtocolError> {
+        self.state.set_alice_base_key(key)?;
+        Ok(())
     }
 
-    fn remote_identity_key(&self) -> PyResult<Option<IdentityKey>> {
-        let key = match self.state.remote_identity_key() {
-            Ok(key) => key,
-            Err(_e) => {
-                return Err(SignalProtocolError::new_err(
-                    "could not access remote identity key",
-                ))
-            }
-        };
-
+    fn remote_identity_key(&self) -> Result<Option<IdentityKey>, SignalProtocolError> {
+        let key = self.state.remote_identity_key()?;
         match key {
             Some(key) => Ok(Some(IdentityKey { key })),
             None => Ok(None),
         }
     }
 
-    fn local_identity_key(&self) -> PyResult<IdentityKey> {
-        match self.state.local_identity_key() {
-            Ok(key) => Ok(IdentityKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access local identity key",
-            )),
-        }
+    fn local_identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
+        Ok(IdentityKey {
+            key: self.state.local_identity_key()?,
+        })
     }
 
-    fn previous_counter(&self) -> PyResult<u32> {
-        match self.state.previous_counter() {
-            Ok(counter) => Ok(counter),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access previous counter",
-            )),
-        }
+    fn previous_counter(&self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.previous_counter()?)
     }
 
-    fn set_previous_counter(&mut self, counter: u32) -> PyResult<()> {
-        match self.state.set_previous_counter(counter) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not set previous counter",
-            )),
-        }
+    fn set_previous_counter(&mut self, counter: u32) -> Result<(), SignalProtocolError> {
+        self.state.set_previous_counter(counter)?;
+        Ok(())
     }
 
-    fn root_key(&self) -> PyResult<RootKey> {
-        match self.state.root_key() {
-            Ok(key) => Ok(RootKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get root key")),
-        }
+    fn root_key(&self) -> Result<RootKey, SignalProtocolError> {
+        Ok(RootKey {
+            key: self.state.root_key()?,
+        })
     }
 
-    fn set_root_key(&mut self, root_key: &RootKey) -> PyResult<()> {
-        match self.state.set_root_key(&root_key.key) {
-            Ok(key) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not set root key")),
-        }
+    fn set_root_key(&mut self, root_key: &RootKey) -> Result<(), SignalProtocolError> {
+        self.state.set_root_key(&root_key.key)?;
+        Ok(())
     }
 
-    fn sender_ratchet_key(&self) -> PyResult<PublicKey> {
-        match self.state.sender_ratchet_key() {
-            Ok(key) => Ok(PublicKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get pub key")),
-        }
+    fn sender_ratchet_key(&self) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey {
+            key: self.state.sender_ratchet_key()?,
+        })
     }
 
-    fn sender_ratchet_private_key(&self) -> PyResult<PrivateKey> {
-        match self.state.sender_ratchet_private_key() {
-            Ok(key) => Ok(PrivateKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get priv key")),
-        }
+    fn sender_ratchet_private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+        Ok(PrivateKey {
+            key: self.state.sender_ratchet_private_key()?,
+        })
     }
 
-    fn has_receiver_chain(&self, sender: &PublicKey) -> PyResult<bool> {
-        match self.state.has_receiver_chain(&sender.key) {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not check receiver chain status",
-            )),
-        }
+    fn has_receiver_chain(&self, sender: &PublicKey) -> Result<bool, SignalProtocolError> {
+        Ok(self.state.has_receiver_chain(&sender.key)?)
     }
 
-    fn has_sender_chain(&self) -> PyResult<bool> {
-        match self.state.has_sender_chain() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not check receiver chain status",
-            )),
-        }
+    fn has_sender_chain(&self) -> Result<bool, SignalProtocolError> {
+        Ok(self.state.has_sender_chain()?)
     }
 
-    fn get_receiver_chain_key(&self, sender: &PublicKey) -> PyResult<Option<ChainKey>> {
-        let key = match self.state.get_receiver_chain_key(&sender.key) {
-            Ok(key) => key,
-            Err(_e) => {
-                return Err(SignalProtocolError::new_err(
-                    "could not get receiver chain key",
-                ))
-            }
-        };
-
+    fn get_receiver_chain_key(
+        &self,
+        sender: &PublicKey,
+    ) -> Result<Option<ChainKey>, SignalProtocolError> {
+        let key = self.state.get_receiver_chain_key(&sender.key)?;
         match key {
             None => Ok(None),
             Some(key) => Ok(Some(ChainKey { key })),
         }
     }
 
-    fn add_receiver_chain(&mut self, sender: &PublicKey, chain_key: &ChainKey) -> PyResult<()> {
-        match self.state.add_receiver_chain(&sender.key, &chain_key.key) {
-            Ok(_v) => Ok(()),
-            Err(_e) => return Err(SignalProtocolError::new_err("could not add receiver chain")),
-        }
+    fn add_receiver_chain(
+        &mut self,
+        sender: &PublicKey,
+        chain_key: &ChainKey,
+    ) -> Result<(), SignalProtocolError> {
+        self.state.add_receiver_chain(&sender.key, &chain_key.key)?;
+        Ok(())
     }
 
-    fn set_sender_chain(&mut self, sender: &KeyPair, next_chain_key: &ChainKey) -> PyResult<()> {
-        match self
-            .state
-            .set_sender_chain(&sender.key, &next_chain_key.key)
-        {
-            Ok(_v) => Ok(()),
-            Err(_e) => return Err(SignalProtocolError::new_err("could not set sender chain")),
-        }
+    fn set_sender_chain(
+        &mut self,
+        sender: &KeyPair,
+        next_chain_key: &ChainKey,
+    ) -> Result<(), SignalProtocolError> {
+        self.state
+            .set_sender_chain(&sender.key, &next_chain_key.key)?;
+        Ok(())
     }
 
-    fn get_sender_chain_key(&self) -> PyResult<ChainKey> {
-        match self.state.get_sender_chain_key() {
-            Ok(key) => Ok(ChainKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get sender chain")),
-        }
+    fn get_sender_chain_key(&self) -> Result<ChainKey, SignalProtocolError> {
+        Ok(ChainKey {
+            key: self.state.get_sender_chain_key()?,
+        })
     }
 
-    fn set_sender_chain_key(&mut self, next_chain_key: &ChainKey) -> PyResult<()> {
-        match self.state.set_sender_chain_key(&next_chain_key.key) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not set sender chain")),
-        }
+    fn set_sender_chain_key(
+        &mut self,
+        next_chain_key: &ChainKey,
+    ) -> Result<(), SignalProtocolError> {
+        self.state.set_sender_chain_key(&next_chain_key.key)?;
+        Ok(())
     }
 
     fn get_message_keys(
         &mut self,
         sender: &PublicKey,
         counter: u32,
-    ) -> PyResult<Option<MessageKeys>> {
-        let key = match self.state.get_message_keys(&sender.key, counter) {
-            Ok(key) => key,
-            Err(_e) => return Err(SignalProtocolError::new_err("could not get message keys")),
-        };
+    ) -> Result<Option<MessageKeys>, SignalProtocolError> {
+        let key = self.state.get_message_keys(&sender.key, counter)?;
 
         match key {
             Some(key) => Ok(Some(MessageKeys { key })),
@@ -473,23 +364,24 @@ impl SessionState {
         }
     }
 
-    fn set_message_keys(&mut self, sender: &PublicKey, message_keys: &MessageKeys) -> PyResult<()> {
-        match self.state.set_message_keys(&sender.key, &message_keys.key) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not set message keys")),
-        }
+    fn set_message_keys(
+        &mut self,
+        sender: &PublicKey,
+        message_keys: &MessageKeys,
+    ) -> Result<(), SignalProtocolError> {
+        self.state
+            .set_message_keys(&sender.key, &message_keys.key)?;
+        Ok(())
     }
 
-    fn set_receiver_chain_key(&mut self, sender: &PublicKey, chain_key: &ChainKey) -> PyResult<()> {
-        match self
-            .state
-            .set_receiver_chain_key(&sender.key, &chain_key.key)
-        {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not set receiver chain key",
-            )),
-        }
+    fn set_receiver_chain_key(
+        &mut self,
+        sender: &PublicKey,
+        chain_key: &ChainKey,
+    ) -> Result<(), SignalProtocolError> {
+        self.state
+            .set_receiver_chain_key(&sender.key, &chain_key.key)?;
+        Ok(())
     }
 
     fn set_pending_key_exchange(
@@ -498,57 +390,40 @@ impl SessionState {
         base_key: &KeyPair,
         ephemeral_key: &KeyPair,
         identity_key: &IdentityKeyPair,
-    ) -> PyResult<()> {
-        match self.state.set_pending_key_exchange(
+    ) -> Result<(), SignalProtocolError> {
+        self.state.set_pending_key_exchange(
             sequence,
             &base_key.key,
             &ephemeral_key.key,
             &identity_key.key,
-        ) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not set pending key exchange",
-            )),
-        }
+        )?;
+        Ok(())
     }
 
-    fn pending_key_exchange_sequence(&self) -> PyResult<u32> {
-        match self.state.pending_key_exchange_sequence() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not get pending key exchange",
-            )),
-        }
+    fn pending_key_exchange_sequence(&self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.pending_key_exchange_sequence()?)
     }
 
-    fn pending_key_exchange_base_key(&self) -> PyResult<KeyPair> {
-        match self.state.pending_key_exchange_base_key() {
-            Ok(key) => Ok(KeyPair { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("no pending key exchange")),
-        }
+    fn pending_key_exchange_base_key(&self) -> Result<KeyPair, SignalProtocolError> {
+        Ok(KeyPair {
+            key: self.state.pending_key_exchange_base_key()?,
+        })
     }
 
-    fn pending_key_exchange_ratchet_key(&self) -> PyResult<KeyPair> {
-        match self.state.pending_key_exchange_ratchet_key() {
-            Ok(key) => Ok(KeyPair { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("no pending key exchange")),
-        }
+    fn pending_key_exchange_ratchet_key(&self) -> Result<KeyPair, SignalProtocolError> {
+        Ok(KeyPair {
+            key: self.state.pending_key_exchange_ratchet_key()?,
+        })
     }
 
-    fn pending_key_exchange_identity_key(&self) -> PyResult<IdentityKeyPair> {
-        match self.state.pending_key_exchange_identity_key() {
-            Ok(key) => Ok(IdentityKeyPair { key }),
-            Err(_e) => Err(SignalProtocolError::new_err("no pending key exchange")),
-        }
+    fn pending_key_exchange_identity_key(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
+        Ok(IdentityKeyPair {
+            key: self.state.pending_key_exchange_identity_key()?,
+        })
     }
 
-    fn has_pending_key_exchange(&self) -> PyResult<bool> {
-        match self.state.has_pending_key_exchange() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not check for pending key exchange",
-            )),
-        }
+    fn has_pending_key_exchange(&self) -> Result<bool, SignalProtocolError> {
+        Ok(self.state.has_pending_key_exchange()?)
     }
 
     fn set_unacknowledged_pre_key_message(
@@ -556,69 +431,47 @@ impl SessionState {
         pre_key_id: Option<u32>,
         signed_pre_key_id: u32,
         base_key: &PublicKey,
-    ) -> PyResult<()> {
-        match self.state.set_unacknowledged_pre_key_message(
+    ) -> Result<(), SignalProtocolError> {
+        self.state.set_unacknowledged_pre_key_message(
             pre_key_id,
             signed_pre_key_id,
             &base_key.key,
-        ) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not set unacknowledged pre key message",
-            )),
-        }
+        )?;
+        Ok(())
     }
 
-    fn clear_unacknowledged_pre_key_message(&mut self) -> PyResult<()> {
-        match self.state.clear_unacknowledged_pre_key_message() {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not clear unacknowledged pre key message",
-            )),
-        }
+    fn clear_unacknowledged_pre_key_message(&mut self) -> Result<(), SignalProtocolError> {
+        self.state.clear_unacknowledged_pre_key_message()?;
+        Ok(())
     }
 
-    fn set_remote_registration_id(&mut self, registration_id: u32) -> PyResult<()> {
-        match self.state.set_remote_registration_id(registration_id) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not set remote registration id",
-            )),
-        }
+    fn set_remote_registration_id(
+        &mut self,
+        registration_id: u32,
+    ) -> Result<(), SignalProtocolError> {
+        self.state.set_remote_registration_id(registration_id)?;
+        Ok(())
     }
 
-    fn remote_registration_id(&mut self) -> PyResult<u32> {
-        match self.state.remote_registration_id() {
-            Ok(id) => Ok(id),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not get remote registration id",
-            )),
-        }
+    fn remote_registration_id(&mut self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.remote_registration_id()?)
     }
 
-    fn set_local_registration_id(&mut self, registration_id: u32) -> PyResult<()> {
-        match self.state.set_local_registration_id(registration_id) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not set local registration id",
-            )),
-        }
+    fn set_local_registration_id(
+        &mut self,
+        registration_id: u32,
+    ) -> Result<(), SignalProtocolError> {
+        self.state.set_local_registration_id(registration_id)?;
+        Ok(())
     }
 
-    fn local_registration_id(&mut self) -> PyResult<u32> {
-        match self.state.local_registration_id() {
-            Ok(id) => Ok(id),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not get local registration id",
-            )),
-        }
+    fn local_registration_id(&mut self) -> Result<u32, SignalProtocolError> {
+        Ok(self.state.local_registration_id()?)
     }
 
-    fn serialize(&mut self, py: Python) -> PyResult<PyObject> {
-        match self.state.serialize() {
-            Ok(result) => Ok(PyBytes::new(py, &result).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not serialize to bytes")),
-        }
+    fn serialize(&mut self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.state.serialize()?;
+        Ok(PyBytes::new(py, &result).into())
     }
 }
 
@@ -646,83 +499,61 @@ impl SessionRecord {
         }
     }
 
-    fn session_state(&self) -> PyResult<SessionState> {
-        match self.state.session_state() {
-            Ok(state) => Ok(SessionState {
-                state: state.clone(),
-            }),
-            Err(_e) => Err(SignalProtocolError::new_err("no session found")),
-        }
+    fn session_state(&self) -> Result<SessionState, SignalProtocolError> {
+        let state = self.state.session_state()?;
+        Ok(SessionState {
+            state: state.clone(),
+        })
     }
 
     #[staticmethod]
     fn deserialize(bytes: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::SessionRecord::deserialize(bytes) {
             Ok(state) => Ok(SessionRecord { state }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not deserialize")),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 
-    fn has_session_state(&self, version: u32, alice_base_key: &[u8]) -> PyResult<bool> {
-        match self.state.has_session_state(version, alice_base_key) {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not access session state",
-            )),
-        }
+    fn has_session_state(
+        &self,
+        version: u32,
+        alice_base_key: &[u8],
+    ) -> Result<bool, SignalProtocolError> {
+        Ok(self.state.has_session_state(version, alice_base_key)?)
     }
 
-    fn set_session_state(&mut self, session: SessionState) -> PyResult<()> {
-        match self.state.set_session_state(session.state) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not set session state")),
-        }
+    fn set_session_state(&mut self, session: SessionState) -> Result<(), SignalProtocolError> {
+        self.state.set_session_state(session.state)?;
+        Ok(())
     }
 
     fn promote_old_session(
         &mut self,
         old_session: usize,
         updated_session: SessionState,
-    ) -> PyResult<()> {
-        match self
-            .state
-            .promote_old_session(old_session, updated_session.state)
-        {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not update session")),
-        }
+    ) -> Result<(), SignalProtocolError> {
+        self.state
+            .promote_old_session(old_session, updated_session.state)?;
+        Ok(())
     }
 
-    fn is_fresh(&self) -> PyResult<bool> {
-        match self.state.is_fresh() {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not check freshness of session",
-            )),
-        }
+    fn is_fresh(&self) -> Result<bool, SignalProtocolError> {
+        Ok(self.state.is_fresh()?)
     }
 
-    fn promote_state(&mut self, new_state: SessionState) -> PyResult<()> {
-        match self.state.promote_state(new_state.state) {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not promote state")),
-        }
+    fn promote_state(&mut self, new_state: SessionState) -> Result<(), SignalProtocolError> {
+        self.state.promote_state(new_state.state)?;
+        Ok(())
     }
 
-    fn archive_current_state(&mut self) -> PyResult<()> {
-        match self.state.archive_current_state() {
-            Ok(_v) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not archive current state",
-            )),
-        }
+    fn archive_current_state(&mut self) -> Result<(), SignalProtocolError> {
+        self.state.archive_current_state()?;
+        Ok(())
     }
 
-    fn serialize(&self, py: Python) -> PyResult<PyObject> {
-        match self.state.serialize() {
-            Ok(result) => Ok(PyBytes::new(py, &result).into()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not serialize")),
-        }
+    fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.state.serialize()?;
+        Ok(PyBytes::new(py, &result).into())
     }
 }
 

@@ -19,7 +19,7 @@ impl ProtocolAddress {
     }
 
     pub fn name(&self) -> &str {
-        &self.state.name()
+        self.state.name()
     }
 
     pub fn device_id(&self) -> u32 {

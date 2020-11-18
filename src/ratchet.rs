@@ -1,6 +1,5 @@
 use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::pyclass::PyClassAlloc;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
@@ -46,31 +45,31 @@ impl AliceSignalProtocolParameters {
         }
     }
 
-    pub fn our_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
+    pub fn our_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
         Ok(IdentityKeyPair {
             key: *self.inner.our_identity_key_pair(),
         })
     }
 
-    pub fn our_base_key_pair(&self) -> PyResult<KeyPair> {
+    pub fn our_base_key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
         Ok(KeyPair {
             key: *self.inner.our_base_key_pair(),
         })
     }
 
-    pub fn their_identity_key(&self) -> PyResult<IdentityKey> {
+    pub fn their_identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
         Ok(IdentityKey {
             key: *self.inner.their_identity_key(),
         })
     }
 
-    pub fn their_signed_pre_key(&self) -> PyResult<PublicKey> {
+    pub fn their_signed_pre_key(&self) -> Result<PublicKey, SignalProtocolError> {
         Ok(PublicKey {
             key: *self.inner.their_signed_pre_key(),
         })
     }
 
-    pub fn their_one_time_pre_key(&self) -> PyResult<Option<PublicKey>> {
+    pub fn their_one_time_pre_key(&self) -> Result<Option<PublicKey>, SignalProtocolError> {
         let key = match self.inner.their_one_time_pre_key() {
             None => return Ok(None),
             Some(key) => key,
@@ -79,7 +78,7 @@ impl AliceSignalProtocolParameters {
         Ok(Some(PublicKey { key: *key }))
     }
 
-    pub fn their_ratchet_key(&self) -> PyResult<PublicKey> {
+    pub fn their_ratchet_key(&self) -> Result<PublicKey, SignalProtocolError> {
         Ok(PublicKey {
             key: *self.inner.their_ratchet_key(),
         })
@@ -89,14 +88,10 @@ impl AliceSignalProtocolParameters {
 #[pyfunction]
 pub fn initialize_alice_session(
     parameters: &AliceSignalProtocolParameters,
-) -> PyResult<SessionRecord> {
+) -> Result<SessionRecord, SignalProtocolError> {
     let mut csprng = OsRng;
-    let session_state =
-        libsignal_protocol_rust::initialize_alice_session(&parameters.inner, &mut csprng);
-    match session_state {
-        Ok(state) => Ok(SessionRecord::new(state)),
-        Err(_e) => return Err(SignalProtocolError::new_err("could not create session")),
-    }
+    let state = libsignal_protocol_rust::initialize_alice_session(&parameters.inner, &mut csprng)?;
+    Ok(SessionRecord::new(state))
 }
 
 #[pyclass]
@@ -132,19 +127,19 @@ impl BobSignalProtocolParameters {
         }
     }
 
-    pub fn our_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
+    pub fn our_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
         Ok(IdentityKeyPair {
             key: *self.inner.our_identity_key_pair(),
         })
     }
 
-    pub fn our_signed_pre_key_pair(&self) -> PyResult<KeyPair> {
+    pub fn our_signed_pre_key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
         Ok(KeyPair {
             key: *self.inner.our_signed_pre_key_pair(),
         })
     }
 
-    pub fn our_one_time_pre_key_pair(&self) -> PyResult<Option<KeyPair>> {
+    pub fn our_one_time_pre_key_pair(&self) -> Result<Option<KeyPair>, SignalProtocolError> {
         let keypair = match self.inner.our_one_time_pre_key_pair() {
             None => return Ok(None),
             Some(keypair) => keypair,
@@ -153,19 +148,19 @@ impl BobSignalProtocolParameters {
         Ok(Some(KeyPair { key: *keypair }))
     }
 
-    pub fn our_ratchet_key_pair(&self) -> PyResult<KeyPair> {
+    pub fn our_ratchet_key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
         Ok(KeyPair {
             key: *self.inner.our_ratchet_key_pair(),
         })
     }
 
-    pub fn their_identity_key(&self) -> PyResult<IdentityKey> {
+    pub fn their_identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
         Ok(IdentityKey {
             key: *self.inner.their_identity_key(),
         })
     }
 
-    pub fn their_base_key(&self) -> PyResult<PublicKey> {
+    pub fn their_base_key(&self) -> Result<PublicKey, SignalProtocolError> {
         Ok(PublicKey {
             key: *self.inner.their_base_key(),
         })
@@ -173,11 +168,11 @@ impl BobSignalProtocolParameters {
 }
 
 #[pyfunction]
-pub fn initialize_bob_session(parameters: &BobSignalProtocolParameters) -> PyResult<SessionRecord> {
-    match libsignal_protocol_rust::initialize_bob_session(&parameters.inner) {
-        Ok(state) => Ok(SessionRecord::new(state)),
-        Err(_e) => Err(SignalProtocolError::new_err("could not create session")),
-    }
+pub fn initialize_bob_session(
+    parameters: &BobSignalProtocolParameters,
+) -> Result<SessionRecord, SignalProtocolError> {
+    let state = libsignal_protocol_rust::initialize_bob_session(&parameters.inner)?;
+    Ok(SessionRecord::new(state))
 }
 
 #[pyclass]
@@ -198,14 +193,11 @@ impl RootKey {
         py: Python,
         their_ratchet_key: &PublicKey,
         our_ratchet_key: &PrivateKey,
-    ) -> PyResult<(RootKey, ChainKey)> {
-        match self
+    ) -> Result<(RootKey, ChainKey), SignalProtocolError> {
+        let result = self
             .key
-            .create_chain(&their_ratchet_key.key, &our_ratchet_key.key)
-        {
-            Ok(result) => Ok((RootKey { key: result.0 }, ChainKey { key: result.1 })),
-            Err(_e) => Err(SignalProtocolError::new_err("could not create chain")),
-        }
+            .create_chain(&their_ratchet_key.key, &our_ratchet_key.key)?;
+        Ok((RootKey { key: result.0 }, ChainKey { key: result.1 }))
     }
 }
 
@@ -226,22 +218,16 @@ impl ChainKey {
         self.key.index()
     }
 
-    pub fn next_chain_key(&self) -> PyResult<Self> {
-        match self.key.next_chain_key() {
-            Ok(key) => Ok(ChainKey { key }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not compute next chain key",
-            )),
-        }
+    pub fn next_chain_key(&self) -> Result<Self, SignalProtocolError> {
+        Ok(ChainKey {
+            key: self.key.next_chain_key()?,
+        })
     }
 
-    pub fn message_keys(&self) -> PyResult<MessageKeys> {
-        match self.key.message_keys() {
-            Ok(key) => Ok(MessageKeys { key }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not compute message keys",
-            )),
-        }
+    pub fn message_keys(&self) -> Result<MessageKeys, SignalProtocolError> {
+        Ok(MessageKeys {
+            key: self.key.message_keys()?,
+        })
     }
 }
 

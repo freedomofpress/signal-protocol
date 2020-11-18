@@ -182,8 +182,7 @@ def test_basic_prekey_v3():
         alice_store, bob_address, original_message
     )
 
-    # TODO: Add to this assert the reason for failure: SignalProtocolError::UntrustedIdentity(alice_address.clone())
-    with pytest.raises(error.SignalProtocolError):
+    with pytest.raises(Exception, match="untrusted identity"):
         session_cipher.message_decrypt(bob_store, alice_address, outgoing_message)
 
     assert bob_store.save_identity(
@@ -207,7 +206,7 @@ def test_basic_prekey_v3():
         alice_store.get_identity_key_pair().identity_key(),
     )
 
-    with pytest.raises(error.SignalProtocolError):
+    with pytest.raises(Exception):
         session.process_prekey_bundle(bob_address, alice_store, bob_pre_key_bundle)
 
 
@@ -266,7 +265,7 @@ def test_bad_signed_pre_key_signature():
             bob_store.get_identity_key_pair().identity_key(),
         )
 
-        with pytest.raises(error.SignalProtocolError):
+        with pytest.raises(Exception):
             session.process_prekey_bundle(bob_address, alice_store, bob_pre_key_bundle)
 
     # Finally check that the non-corrupted signature is accepted:
@@ -473,7 +472,7 @@ def test_bad_message_bundle():
     incoming_message = protocol.PreKeySignalMessage.try_from(corrupted_message)
 
     # This incoming message is corrupted, so we expect an exception to be raised
-    with pytest.raises(error.SignalProtocolError):
+    with pytest.raises(Exception):
         session_cipher.message_decrypt(bob_store, alice_address, incoming_message)
 
     assert bob_store.get_pre_key(pre_key_id)
@@ -487,8 +486,7 @@ def test_bad_message_bundle():
     assert original_message == plaintext.decode("utf8")
 
     # Trying to get the prekey will now fail, as the prekey has been used and removed from the store
-    # TODO: Check this is SignalProtocolError::InvalidPreKeyId in the assert
-    with pytest.raises(error.SignalProtocolError):
+    with pytest.raises(Exception, match="invalid prekey identifier"):
         assert bob_store.get_pre_key(pre_key_id)
 
 
@@ -613,9 +611,7 @@ def test_message_key_limits():  # Note: slow test
         == f"It's over {TOO_MANY_MESSAGES - 1}"
     )
 
-    with pytest.raises(
-        error.SignalProtocolError
-    ):  # TODO: Assert it is SignalProtocolError::DuplicatedMessage(2300, 5)
+    with pytest.raises(Exception, match="message with old counter"):
         session_cipher.message_decrypt(bob_store, alice_address, inflight[5])
 
 
@@ -923,8 +919,12 @@ def test_simultaneous_initiate_repeated_messages():
         )
         assert bob_plaintext.decode("utf8") == "hi bob"
 
-        assert alice_store.load_session(bob_address).session_state().session_version() == 3
-        assert bob_store.load_session(alice_address).session_state().session_version() == 3
+        assert (
+            alice_store.load_session(bob_address).session_state().session_version() == 3
+        )
+        assert (
+            bob_store.load_session(alice_address).session_state().session_version() == 3
+        )
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -963,8 +963,12 @@ def test_simultaneous_initiate_repeated_messages():
         )
         assert bob_plaintext.decode("utf8") == "hi bob"
 
-        assert alice_store.load_session(bob_address).session_state().session_version() == 3
-        assert bob_store.load_session(alice_address).session_state().session_version() == 3
+        assert (
+            alice_store.load_session(bob_address).session_state().session_version() == 3
+        )
+        assert (
+            bob_store.load_session(alice_address).session_state().session_version() == 3
+        )
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -1064,8 +1068,12 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         )
         assert bob_plaintext.decode("utf8") == "hi bob"
 
-        assert alice_store.load_session(bob_address).session_state().session_version() == 3
-        assert bob_store.load_session(alice_address).session_state().session_version() == 3
+        assert (
+            alice_store.load_session(bob_address).session_state().session_version() == 3
+        )
+        assert (
+            bob_store.load_session(alice_address).session_state().session_version() == 3
+        )
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -1104,8 +1112,12 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         )
         assert bob_plaintext.decode("utf8") == "hi bob"
 
-        assert alice_store.load_session(bob_address).session_state().session_version() == 3
-        assert bob_store.load_session(alice_address).session_state().session_version() == 3
+        assert (
+            alice_store.load_session(bob_address).session_state().session_version() == 3
+        )
+        assert (
+            bob_store.load_session(alice_address).session_state().session_version() == 3
+        )
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address

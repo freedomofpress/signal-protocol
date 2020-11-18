@@ -1,6 +1,5 @@
 use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::pyclass::PyClassAlloc;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
@@ -21,7 +20,7 @@ pub fn process_prekey(
     remote_address: &ProtocolAddress,
     session_record: &mut SessionRecord,
     protocol_store: &mut InMemSignalProtocolStore,
-) -> PyResult<Option<PreKeyId>> {
+) -> Result<Option<PreKeyId>, SignalProtocolError> {
     let result = libsignal_protocol_rust::process_prekey(
         &message.data,
         &remote_address.state,
@@ -30,14 +29,8 @@ pub fn process_prekey(
         &mut protocol_store.store.pre_key_store,
         &mut protocol_store.store.signed_pre_key_store,
         None,
-    );
-
-    match result {
-        Ok(prekey_id) => Ok(prekey_id),
-        Err(_e) => Err(SignalProtocolError::new_err(
-            "error processing prekey bundle",
-        )),
-    }
+    )?;
+    Ok(result)
 }
 
 #[pyfunction]
@@ -45,7 +38,7 @@ pub fn process_prekey_bundle(
     remote_address: ProtocolAddress,
     protocol_store: &mut InMemSignalProtocolStore,
     bundle: PreKeyBundle,
-) -> PyResult<()> {
+) -> Result<(), SignalProtocolError> {
     let mut csprng = OsRng;
     let result = libsignal_protocol_rust::process_prekey_bundle(
         &remote_address.state,
@@ -54,14 +47,8 @@ pub fn process_prekey_bundle(
         &bundle.state,
         &mut csprng,
         None,
-    );
-
-    match result {
-        Ok(()) => Ok(()),
-        Err(_e) => Err(SignalProtocolError::new_err(
-            "error processing prekey bundle",
-        )),
-    }
+    )?;
+    Ok(())
 }
 
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {

@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
+use std::convert;
 
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
@@ -26,9 +27,7 @@ impl InMemSignalProtocolStore {
         match libsignal_protocol_rust::InMemSignalProtocolStore::new(key_pair.key, registration_id)
         {
             Ok(store) => Ok(Self { store }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not create InMemSignalProtocolStore",
-            )),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
         }
     }
 }
@@ -37,44 +36,34 @@ impl InMemSignalProtocolStore {
 /// is_trusted_identity is not implemented (it requries traits::Direction as arg)
 #[pymethods]
 impl InMemSignalProtocolStore {
-    fn get_identity_key_pair(&self) -> PyResult<IdentityKeyPair> {
-        match self.store.identity_store.get_identity_key_pair(None) {
-            Ok(key) => Ok(IdentityKeyPair { key }),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not get identity key pair",
-            )),
-        }
+    fn get_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
+        let key = self.store.identity_store.get_identity_key_pair(None)?;
+        Ok(IdentityKeyPair { key })
     }
 
-    fn get_local_registration_id(&self) -> PyResult<u32> {
-        match self.store.identity_store.get_local_registration_id(None) {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err(
-                "could not get local registration ID",
-            )),
-        }
+    fn get_local_registration_id(&self) -> Result<u32, SignalProtocolError> {
+        Ok(self.store.identity_store.get_local_registration_id(None)?)
     }
 
     fn save_identity(
         &mut self,
         address: &ProtocolAddress,
         identity: &IdentityKey,
-    ) -> PyResult<bool> {
-        match self
+    ) -> Result<bool, SignalProtocolError> {
+        Ok(self
             .store
             .identity_store
-            .save_identity(&address.state, &identity.key, None)
-        {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("could not save identity")),
-        }
+            .save_identity(&address.state, &identity.key, None)?)
     }
 
-    fn get_identity(&self, address: &ProtocolAddress) -> PyResult<Option<IdentityKey>> {
-        let key = match self.store.identity_store.get_identity(&address.state, None) {
-            Ok(key) => key,
-            Err(_e) => return Err(SignalProtocolError::new_err("could not get identity")),
-        };
+    fn get_identity(
+        &self,
+        address: &ProtocolAddress,
+    ) -> Result<Option<IdentityKey>, SignalProtocolError> {
+        let key = self
+            .store
+            .identity_store
+            .get_identity(&address.state, None)?;
 
         match key {
             Some(key) => Ok(Some(IdentityKey { key })),
@@ -86,11 +75,11 @@ impl InMemSignalProtocolStore {
 /// libsignal_protocol_rust::SessionStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    pub fn load_session(&self, address: &ProtocolAddress) -> PyResult<Option<SessionRecord>> {
-        let session = match self.store.load_session(&address.state, None) {
-            Ok(session) => session,
-            Err(_e) => return Err(SignalProtocolError::new_err("could not load session")),
-        };
+    pub fn load_session(
+        &self,
+        address: &ProtocolAddress,
+    ) -> Result<Option<SessionRecord>, SignalProtocolError> {
+        let session = self.store.load_session(&address.state, None)?;
 
         match session {
             None => Ok(None),
@@ -98,68 +87,61 @@ impl InMemSignalProtocolStore {
         }
     }
 
-    fn store_session(&mut self, address: &ProtocolAddress, record: &SessionRecord) -> PyResult<()> {
-        match self
-            .store
-            .store_session(&address.state, &record.state, None)
-        {
-            Ok(()) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not store session")),
-        }
+    fn store_session(
+        &mut self,
+        address: &ProtocolAddress,
+        record: &SessionRecord,
+    ) -> Result<(), SignalProtocolError> {
+        self.store
+            .store_session(&address.state, &record.state, None)?;
+        Ok(())
     }
 }
 
 /// libsignal_protocol_rust::PreKeyStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    fn get_pre_key(&self, id: PreKeyId) -> PyResult<PreKeyRecord> {
-        match self.store.pre_key_store.get_pre_key(id, None) {
-            Ok(result) => Ok(PreKeyRecord { state: result }),
-            Err(_e) => Err(SignalProtocolError::new_err("invalid prekey ID")),
-        }
+    fn get_pre_key(&self, id: PreKeyId) -> Result<PreKeyRecord, SignalProtocolError> {
+        let state = self.store.pre_key_store.get_pre_key(id, None)?;
+        Ok(PreKeyRecord { state })
     }
 
-    fn save_pre_key(&mut self, id: PreKeyId, record: &PreKeyRecord) -> PyResult<()> {
-        match self
-            .store
+    fn save_pre_key(
+        &mut self,
+        id: PreKeyId,
+        record: &PreKeyRecord,
+    ) -> Result<(), SignalProtocolError> {
+        self.store
             .pre_key_store
-            .save_pre_key(id, &record.state, None)
-        {
-            Ok(result) => Ok(result),
-            Err(_e) => Err(SignalProtocolError::new_err("unknown signal error")),
-        }
+            .save_pre_key(id, &record.state, None)?;
+        Ok(())
     }
 
-    fn remove_pre_key(&mut self, id: PreKeyId) -> PyResult<()> {
-        match self.store.pre_key_store.remove_pre_key(id, None) {
-            Ok(()) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not remove prekey")),
-        }
+    fn remove_pre_key(&mut self, id: PreKeyId) -> Result<(), SignalProtocolError> {
+        self.store.pre_key_store.remove_pre_key(id, None)?;
+        Ok(())
     }
 }
 
 /// libsignal_protocol_rust::SignedPreKeyStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    fn get_signed_pre_key(&self, id: SignedPreKeyId) -> PyResult<SignedPreKeyRecord> {
-        match self.store.get_signed_pre_key(id, None) {
-            Ok(state) => Ok(SignedPreKeyRecord { state }),
-            Err(_e) => Err(SignalProtocolError::new_err("could not get signed prekey")),
-        }
+    fn get_signed_pre_key(
+        &self,
+        id: SignedPreKeyId,
+    ) -> Result<SignedPreKeyRecord, SignalProtocolError> {
+        let state = self.store.get_signed_pre_key(id, None)?;
+        Ok(SignedPreKeyRecord { state })
     }
 
     fn save_signed_pre_key(
         &mut self,
         id: SignedPreKeyId,
         record: &SignedPreKeyRecord,
-    ) -> PyResult<()> {
-        match self
-            .store
-            .save_signed_pre_key(id, &record.state.to_owned(), None)
-        {
-            Ok(()) => Ok(()),
-            Err(_e) => Err(SignalProtocolError::new_err("could not save signed prekey")),
-        }
+    ) -> Result<(), SignalProtocolError> {
+        self.store
+            .save_signed_pre_key(id, &record.state.to_owned(), None)?;
+        Ok(())
     }
 }
 
