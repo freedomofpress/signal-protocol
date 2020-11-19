@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 mod address;
 mod curve;
 mod error;
+mod fingerprint;
 mod identity_key;
 mod protocol;
 mod ratchet;
@@ -34,6 +35,10 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let error_submod = PyModule::new(py, "error")?;
     error::init_submodule(py, error_submod)?;
     module.add_submodule(error_submod)?;
+
+    let fingerprint_submod = PyModule::new(py, "fingerprint")?;
+    fingerprint::init_submodule(fingerprint_submod)?;
+    module.add_submodule(fingerprint_submod)?;
 
     let identity_key_submod = PyModule::new(py, "identity_key")?;
     identity_key::init_submodule(identity_key_submod)?;
