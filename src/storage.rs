@@ -1,16 +1,10 @@
-use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
-
-use rand::rngs::OsRng;
-use std::convert;
 
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::state::{PreKeyId, PreKeyRecord, SessionRecord, SignedPreKeyId, SignedPreKeyRecord};
 
-use libsignal_protocol_rust;
 // traits
 use libsignal_protocol_rust::{IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore};
 

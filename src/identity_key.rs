@@ -1,13 +1,9 @@
 use std::convert::TryFrom;
 
-use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
 use rand::rngs::OsRng;
-use std::convert;
-
-use libsignal_protocol_rust;
 
 use crate::curve::{PrivateKey, PublicKey};
 use crate::error::SignalProtocolError;
@@ -30,7 +26,7 @@ impl IdentityKey {
         }
     }
 
-    pub fn public_key(&self, py: Python) -> Result<PublicKey, SignalProtocolError> {
+    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
         Ok(PublicKey::deserialize(&self.key.public_key().serialize())?)
     }
 

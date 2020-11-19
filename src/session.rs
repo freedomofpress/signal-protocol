@@ -1,12 +1,7 @@
-use pyo3::exceptions;
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
-
-use libsignal_protocol_rust;
-use libsignal_protocol_rust::{IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore};
 
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
@@ -40,7 +35,7 @@ pub fn process_prekey_bundle(
     bundle: PreKeyBundle,
 ) -> Result<(), SignalProtocolError> {
     let mut csprng = OsRng;
-    let result = libsignal_protocol_rust::process_prekey_bundle(
+    libsignal_protocol_rust::process_prekey_bundle(
         &remote_address.state,
         &mut protocol_store.store.session_store,
         &mut protocol_store.store.identity_store,

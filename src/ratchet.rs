@@ -1,4 +1,3 @@
-use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
@@ -9,8 +8,6 @@ use crate::curve::{KeyPair, PrivateKey, PublicKey};
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::state::SessionRecord;
-
-use libsignal_protocol_rust;
 
 #[pyclass]
 pub struct AliceSignalProtocolParameters {
@@ -190,7 +187,6 @@ impl RootKey {
 
     pub fn create_chain(
         &self,
-        py: Python,
         their_ratchet_key: &PublicKey,
         our_ratchet_key: &PrivateKey,
     ) -> Result<(RootKey, ChainKey), SignalProtocolError> {

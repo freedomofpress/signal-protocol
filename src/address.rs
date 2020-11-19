@@ -1,8 +1,6 @@
 use pyo3::class::basic::PyObjectProtocol;
 use pyo3::prelude::*;
 
-use libsignal_protocol_rust;
-
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct ProtocolAddress {

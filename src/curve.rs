@@ -1,11 +1,8 @@
-use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
-
-use libsignal_protocol_rust;
 
 use crate::error::SignalProtocolError;
 
@@ -30,7 +27,6 @@ pub struct KeyPair {
 impl KeyPair {
     #[new]
     fn new(public_key: PublicKey, private_key: PrivateKey) -> Self {
-        let mut csprng = OsRng;
         let keypair = libsignal_protocol_rust::KeyPair::new(public_key.key, private_key.key);
         KeyPair { key: keypair }
     }
@@ -42,11 +38,11 @@ impl KeyPair {
         KeyPair { key: keypair }
     }
 
-    pub fn public_key(&self, py: Python) -> Result<PublicKey, SignalProtocolError> {
+    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
         Ok(PublicKey::deserialize(&self.key.public_key.serialize())?)
     }
 
-    pub fn private_key(&self, py: Python) -> Result<PrivateKey, SignalProtocolError> {
+    pub fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
         Ok(PrivateKey::deserialize(&self.key.private_key.serialize())?)
     }
 
@@ -95,7 +91,7 @@ pub struct PublicKey {
 }
 
 impl PublicKey {
-    fn new(key: libsignal_protocol_rust::PublicKey) -> Self {
+    pub fn new(key: libsignal_protocol_rust::PublicKey) -> Self {
         PublicKey { key }
     }
 }
@@ -130,7 +126,7 @@ pub struct PrivateKey {
 }
 
 impl PrivateKey {
-    fn new(key: libsignal_protocol_rust::PrivateKey) -> Self {
+    pub fn new(key: libsignal_protocol_rust::PrivateKey) -> Self {
         PrivateKey { key }
     }
 }

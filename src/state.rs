@@ -1,9 +1,5 @@
-use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
-use pyo3::wrap_pyfunction;
-
-use libsignal_protocol_rust;
 
 use crate::curve::{KeyPair, PrivateKey, PublicKey};
 use crate::error::SignalProtocolError;
@@ -141,9 +137,7 @@ impl PreKeyRecord {
     }
 
     fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
-        Ok(PrivateKey {
-            key: self.state.private_key()?,
-        })
+        Ok(PrivateKey::new(self.state.private_key()?))
     }
 
     fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
