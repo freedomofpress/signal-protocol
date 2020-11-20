@@ -7,6 +7,7 @@ mod fingerprint;
 mod identity_key;
 mod protocol;
 mod ratchet;
+mod sender_keys;
 mod session;
 mod session_cipher;
 mod state;
@@ -51,6 +52,10 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let ratchet_submod = PyModule::new(py, "ratchet")?;
     ratchet::init_submodule(ratchet_submod)?;
     module.add_submodule(ratchet_submod)?;
+
+    let sender_keys_submod = PyModule::new(py, "sender_keys")?;
+    sender_keys::init_submodule(sender_keys_submod)?;
+    module.add_submodule(sender_keys_submod)?;
 
     let session_cipher_submod = PyModule::new(py, "session_cipher")?;
     session_cipher::init_submodule(session_cipher_submod)?;
