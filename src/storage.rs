@@ -3,10 +3,13 @@ use pyo3::prelude::*;
 use crate::address::ProtocolAddress;
 use crate::error::SignalProtocolError;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
+use crate::sender_keys::{SenderKeyName, SenderKeyRecord};
 use crate::state::{PreKeyId, PreKeyRecord, SessionRecord, SignedPreKeyId, SignedPreKeyRecord};
 
 // traits
-use libsignal_protocol_rust::{IdentityKeyStore, PreKeyStore, SessionStore, SignedPreKeyStore};
+use libsignal_protocol_rust::{
+    IdentityKeyStore, PreKeyStore, SenderKeyStore, SessionStore, SignedPreKeyStore,
+};
 
 #[pyclass]
 #[derive(Clone)]
@@ -136,6 +139,30 @@ impl InMemSignalProtocolStore {
         self.store
             .save_signed_pre_key(id, &record.state.to_owned(), None)?;
         Ok(())
+    }
+}
+
+/// libsignal_protocol_rust::SenderKeyStore
+#[pymethods]
+impl InMemSignalProtocolStore {
+    fn store_sender_key(
+        &mut self,
+        sender_key_name: &SenderKeyName,
+        record: &SenderKeyRecord,
+    ) -> Result<(), SignalProtocolError> {
+        Ok(self
+            .store
+            .store_sender_key(&sender_key_name.state, &record.state, None)?)
+    }
+
+    fn load_sender_key(
+        &mut self,
+        sender_key_name: &SenderKeyName,
+    ) -> Result<Option<SenderKeyRecord>, SignalProtocolError> {
+        match self.store.load_sender_key(&sender_key_name.state, None)? {
+            Some(state) => Ok(Some(SenderKeyRecord { state })),
+            None => Ok(None),
+        }
     }
 }
 
