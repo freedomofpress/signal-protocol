@@ -1,3 +1,5 @@
+use pyo3::class::basic::{CompareOp, PyObjectProtocol};
+use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
@@ -116,6 +118,17 @@ impl PublicKey {
         signature: &[u8],
     ) -> Result<bool, SignalProtocolError> {
         Ok(self.key.verify_signature(&message, &signature)?)
+    }
+}
+
+#[pyproto]
+impl PyObjectProtocol for PublicKey {
+    fn __richcmp__(&self, other: PublicKey, op: CompareOp) -> PyResult<bool> {
+        match op {
+            CompareOp::Eq => Ok(self.key.serialize() == other.key.serialize()),
+            CompareOp::Ne => Ok(self.key.serialize() != other.key.serialize()),
+            _ => Err(exceptions::PyNotImplementedError::new_err(())),
+        }
     }
 }
 

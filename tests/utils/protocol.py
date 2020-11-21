@@ -40,10 +40,7 @@ def create_signal_message():
 
 def assert_signal_message_equals(message1, message2):
     assert message1.message_version() == message2.message_version()
-    assert (
-        message1.sender_ratchet_key().serialize()
-        == message2.sender_ratchet_key().serialize()
-    )
+    assert message1.sender_ratchet_key() == message2.sender_ratchet_key()
     assert message1.counter() == message2.counter()
     assert message1.body() == message2.body()
     assert message1.serialized() == message2.serialized()

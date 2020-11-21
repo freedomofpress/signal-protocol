@@ -47,13 +47,10 @@ def test_pre_key_signal_message_serialize_deserialize():
         pre_key_signal_message.signed_pre_key_id()
         == deserialized_prekey_message.signed_pre_key_id()
     )
+    assert pre_key_signal_message.base_key() == deserialized_prekey_message.base_key()
     assert (
-        pre_key_signal_message.base_key().serialize()
-        == deserialized_prekey_message.base_key().serialize()
-    )
-    assert (
-        pre_key_signal_message.identity_key().public_key().serialize()
-        == deserialized_prekey_message.identity_key().public_key().serialize()
+        pre_key_signal_message.identity_key().public_key()
+        == deserialized_prekey_message.identity_key().public_key()
     )
     assert_signal_message_equals(
         deserialized_prekey_message.message(), pre_key_signal_message.message()
