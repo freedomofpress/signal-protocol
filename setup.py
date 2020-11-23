@@ -4,6 +4,9 @@ import sys
 from setuptools import setup
 from setuptools_rust import Binding, RustExtension
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name="signal-protocol",
     version="0.2.0",
@@ -14,7 +17,7 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Rust",
     ],
-    rust_extensions=[RustExtension("signal_protocol", "Cargo.toml", binding=Binding.PyO3)],
+    rust_extensions=[RustExtension("signal_protocol.signal_protocol", "Cargo.toml", binding=Binding.PyO3)],
     setup_requires=["setuptools-rust>=0.10.1", "wheel"],
     zip_safe=False,  # Rust extensions are not zip safe
 )
