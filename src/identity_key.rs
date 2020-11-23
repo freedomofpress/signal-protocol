@@ -1,7 +1,10 @@
 use std::convert::TryFrom;
 
+use pyo3::basic::CompareOp;
+use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use pyo3::PyObjectProtocol;
 
 use rand::rngs::OsRng;
 
@@ -35,6 +38,17 @@ impl IdentityKey {
     }
 }
 
+#[pyproto]
+impl PyObjectProtocol for IdentityKey {
+    fn __richcmp__(&self, other: IdentityKey, op: CompareOp) -> PyResult<bool> {
+        match op {
+            CompareOp::Eq => Ok(self.key.serialize() == other.key.serialize()),
+            CompareOp::Ne => Ok(self.key.serialize() != other.key.serialize()),
+            _ => Err(exceptions::PyNotImplementedError::new_err(())),
+        }
+    }
+}
+
 #[pyclass]
 #[derive(Clone, Copy)]
 pub struct IdentityKeyPair {
@@ -44,7 +58,14 @@ pub struct IdentityKeyPair {
 #[pymethods]
 impl IdentityKeyPair {
     #[new]
-    pub fn new(identity_key_pair_bytes: &[u8]) -> PyResult<Self> {
+    pub fn new(identity_key: IdentityKey, private_key: PrivateKey) -> Self {
+        Self {
+            key: libsignal_protocol_rust::IdentityKeyPair::new(identity_key.key, private_key.key),
+        }
+    }
+
+    #[staticmethod]
+    pub fn from_bytes(identity_key_pair_bytes: &[u8]) -> PyResult<Self> {
         match libsignal_protocol_rust::IdentityKeyPair::try_from(identity_key_pair_bytes) {
             Ok(key) => Ok(Self { key }),
             Err(err) => Err(SignalProtocolError::new_err(err)),
