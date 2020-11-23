@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="signal-protocol",
-    version="0.2.0",
+    version="0.2.1",
     classifiers=[
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         "Development Status :: 3 - Alpha",
@@ -17,6 +17,8 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Rust",
     ],
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     rust_extensions=[RustExtension("signal_protocol.signal_protocol", "Cargo.toml", binding=Binding.PyO3)],
     setup_requires=["setuptools-rust>=0.10.1", "wheel"],
     zip_safe=False,  # Rust extensions are not zip safe
