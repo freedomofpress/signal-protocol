@@ -6,9 +6,9 @@ from setuptools_rust import Binding, RustExtension
 
 setup(
     name="signal-protocol",
-    version="0.1.0",
+    version="0.2.0",
     classifiers=[
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
