@@ -78,5 +78,29 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     storage::init_submodule(storage_submod)?;
     module.add_submodule(storage_submod)?;
 
+    // Workaround to enable imports from submodules. Upstream issue: pyo3 issue #759
+    // https://github.com/PyO3/pyo3/issues/759#issuecomment-653964601
+    let mods = [
+        "address",
+        "curve",
+        "error",
+        "fingerprint",
+        "group_cipher",
+        "identity_key",
+        "protocol",
+        "ratchet",
+        "sender_keys",
+        "session_cipher",
+        "session",
+        "state",
+        "storage",
+    ];
+    for module_name in mods.iter() {
+        let cmd = format!(
+            "import sys; sys.modules['signal_protocol.{}'] = {}",
+            module_name, module_name
+        );
+        py.run(&cmd, None, Some(module.dict()))?;
+    }
     Ok(())
 }
