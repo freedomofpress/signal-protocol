@@ -17,8 +17,10 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Rust",
     ],
+    description="Rust extension providing Python bindings to the signal protocol",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    packages=["signal_protocol"],
     rust_extensions=[RustExtension("signal_protocol.signal_protocol", "Cargo.toml", binding=Binding.PyO3)],
     setup_requires=["setuptools-rust>=0.10.1", "wheel"],
     zip_safe=False,  # Rust extensions are not zip safe
