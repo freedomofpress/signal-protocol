@@ -5,6 +5,14 @@
 
 Experimental Python bindings to [`libsignal-client`](https://github.com/signalapp/libsignal-client) Rust signal protocol implementation. This project provides a Rust extension using [PyO3](https://pyo3.rs/) to define a `signal_protocol` Python module. See [here](https://cryptography.io/en/latest/limitations.html) for a fundamental limitation storing secrets in Python-allocated memory. ⚠️USE AT YOUR OWN RISK!⚠️
 
+# Installation
+
+To use the wheel distributions you do not need the Rust toolchain installed:
+
+```
+pip install signal-protocol
+```
+
 # Usage
 
 ## Initial setup
