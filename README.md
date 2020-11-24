@@ -1,6 +1,9 @@
 # signal-protocol
 
-Experimental Python bindings to [`libsignal-client`](https://github.com/signalapp/libsignal-protocol-rust) Rust signal protocol implementation. This project provides a Rust extension using [PyO3](https://pyo3.rs/) to define a `signal_protocol` Python module. See [here](https://cryptography.io/en/latest/limitations.html) for a fundamental limitation storing secrets in Python-allocated memory. ⚠️USE AT YOUR OWN RISK!⚠️
+[![CircleCI](https://circleci.com/gh/freedomofpress/signal-protocol.svg?style=svg)](https://circleci.com/gh/freedomofpress/signal-protocol)
+[![PyPI version](https://badge.fury.io/py/signal-protocol.svg)](https://badge.fury.io/py/signal-protocol)
+
+Experimental Python bindings to [`libsignal-client`](https://github.com/signalapp/libsignal-client) Rust signal protocol implementation. This project provides a Rust extension using [PyO3](https://pyo3.rs/) to define a `signal_protocol` Python module. See [here](https://cryptography.io/en/latest/limitations.html) for a fundamental limitation storing secrets in Python-allocated memory. ⚠️USE AT YOUR OWN RISK!⚠️
 
 # Usage
 
