@@ -44,3 +44,6 @@ def test_define_prekey_bundle_under_prekey_exhaustion():
         bob_signed_pre_key_signature,
         bob_store.get_identity_key_pair().identity_key(),
     )
+
+    prekeyrecords = state.generate_n_prekeys(256, pre_key_id, bob_signed_pre_key_pair)
+    assert len(prekeyrecords) == 256
