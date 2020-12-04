@@ -159,11 +159,14 @@ impl PreKeyRecord {
 /// manykeys = state.generate_n_prekeys(100, prekeyid, prekeypair)  # generates 100 keys
 /// ```
 #[pyfunction]
-pub fn generate_n_prekeys(n: u16, id: PreKeyId, keypair: &KeyPair) -> Vec<PreKeyRecord> {
+pub fn generate_n_prekeys(n: u16, id: PreKeyId) -> Vec<PreKeyRecord> {
     let mut keyvec: Vec<PreKeyRecord> = Vec::new();
-    for _i in 0..n {
-        let prekey = PreKeyRecord::new(id, keypair);
+    let mut i: u32 = id;
+    for _n in 0..n {
+        let keypair = KeyPair::generate();
+        let prekey = PreKeyRecord::new(i, &keypair);
         keyvec.push(prekey);
+        i += 1;
     }
 
     keyvec
