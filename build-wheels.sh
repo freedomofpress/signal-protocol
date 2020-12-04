@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
+curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly-2020-11-09 -y
 export PATH="$HOME/.cargo/bin:$PATH"
 
 cd /io
