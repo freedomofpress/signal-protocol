@@ -154,9 +154,9 @@ impl PreKeyRecord {
 ///
 /// ```
 /// from signal_protocol import curve, state
-/// prekeypair = curve.KeyPair.generate()
+///
 /// prekeyid = 1
-/// manykeys = state.generate_n_prekeys(100, prekeyid, prekeypair)  # generates 100 keys
+/// manykeys = state.generate_n_prekeys(100, prekeyid)  # generates 100 keys
 /// ```
 #[pyfunction]
 pub fn generate_n_prekeys(n: u16, id: PreKeyId) -> Vec<PreKeyRecord> {
