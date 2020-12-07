@@ -77,7 +77,7 @@ def test_basic_prekey_v3():
     assert alice_store.load_session(bob_address)
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
 
-    original_message = "Hobgoblins hold themselves to high standards of military honor"
+    original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
     outgoing_message = session_cipher.message_encrypt(
         alice_store, bob_address, original_message
@@ -107,9 +107,9 @@ def test_basic_prekey_v3():
         bob_store, alice_address, incoming_message
     )
 
-    assert original_message == plaintext.decode("utf8")
+    assert original_message == plaintext
 
-    bobs_response = "Who watches the watchers?"
+    bobs_response = b"Who watches the watchers?"
 
     assert bob_store.load_session(alice_address)
 
@@ -127,7 +127,7 @@ def test_basic_prekey_v3():
     alice_decrypts = session_cipher.message_decrypt(
         alice_store, bob_address, bob_outgoing
     )
-    assert alice_decrypts.decode("utf8") == bobs_response
+    assert alice_decrypts == bobs_response
 
     run_interaction(alice_store, alice_address, bob_store, bob_address)
 
@@ -192,7 +192,7 @@ def test_basic_prekey_v3():
     decrypted = session_cipher.message_decrypt(
         bob_store, alice_address, outgoing_message
     )
-    assert decrypted.decode("utf8") == original_message
+    assert decrypted == original_message
 
     # Sign pre-key with wrong key
     bob_pre_key_bundle = state.PreKeyBundle(
@@ -334,7 +334,7 @@ def test_repeat_bundle_message_v3():
     assert alice_store.load_session(bob_address)
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
 
-    original_message = "Hobgoblins hold themselves to high standards of military honor"
+    original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
     outgoing_message1 = session_cipher.message_encrypt(
         alice_store, bob_address, original_message
@@ -361,7 +361,7 @@ def test_repeat_bundle_message_v3():
     bob_store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 
     ptext = session_cipher.message_decrypt(bob_store, alice_address, incoming_message)
-    assert original_message == ptext.decode("utf8")
+    assert original_message == ptext
 
     bob_outgoing = session_cipher.message_encrypt(
         bob_store, alice_address, original_message
@@ -371,7 +371,7 @@ def test_repeat_bundle_message_v3():
     alice_decrypts = session_cipher.message_decrypt(
         alice_store, bob_address, bob_outgoing
     )
-    assert alice_decrypts.decode("utf8") == original_message
+    assert alice_decrypts == original_message
 
     # Verify the second message can be processed
 
@@ -379,7 +379,7 @@ def test_repeat_bundle_message_v3():
         outgoing_message2.serialize()
     )
     ptext = session_cipher.message_decrypt(bob_store, alice_address, incoming_message2)
-    assert original_message == ptext.decode("utf8")
+    assert original_message == ptext
 
     bob_outgoing = session_cipher.message_encrypt(
         bob_store, alice_address, original_message
@@ -387,7 +387,7 @@ def test_repeat_bundle_message_v3():
     alice_decrypts = session_cipher.message_decrypt(
         alice_store, bob_address, bob_outgoing
     )
-    assert alice_decrypts.decode("utf8") == original_message
+    assert alice_decrypts == original_message
 
 
 def test_bad_message_bundle():
@@ -452,7 +452,7 @@ def test_bad_message_bundle():
     assert alice_store.load_session(bob_address)
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
 
-    original_message = "Hobgoblins hold themselves to high standards of military honor"
+    original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
     assert bob_store.get_pre_key(pre_key_id)
 
@@ -483,7 +483,7 @@ def test_bad_message_bundle():
         bob_store, alice_address, incoming_message
     )
 
-    assert original_message == plaintext.decode("utf8")
+    assert original_message == plaintext
 
     # Trying to get the prekey will now fail, as the prekey has been used and removed from the store
     with pytest.raises(Exception, match="invalid prekey identifier"):
@@ -536,7 +536,7 @@ def test_optional_one_time_prekey():
 
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
 
-    original_message = "Hobgoblins hold themselves to high standards of military honor"
+    original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
     outgoing_message = session_cipher.message_encrypt(
         alice_store, bob_address, original_message
@@ -558,7 +558,7 @@ def test_optional_one_time_prekey():
     plaintext = session_cipher.message_decrypt(
         bob_store, alice_address, incoming_message
     )
-    assert original_message == plaintext.decode("utf8")
+    assert original_message == plaintext
 
 
 def test_basic_session_v3():
@@ -594,22 +594,18 @@ def test_message_key_limits():  # Note: slow test
     inflight = []
 
     for i in range(TOO_MANY_MESSAGES):
+        msg = f"It's over {i}"
         inflight.append(
-            session_cipher.message_encrypt(alice_store, bob_address, f"It's over {i}")
+            session_cipher.message_encrypt(alice_store, bob_address, msg.encode("utf8"))
         )
 
     assert (
-        session_cipher.message_decrypt(bob_store, alice_address, inflight[1000]).decode(
-            "utf8"
-        )
-        == "It's over 1000"
+        session_cipher.message_decrypt(bob_store, alice_address, inflight[1000])
+        == b"It's over 1000"
     )
-    assert (
-        session_cipher.message_decrypt(
-            bob_store, alice_address, inflight[TOO_MANY_MESSAGES - 1]
-        ).decode("utf8")
-        == f"It's over {TOO_MANY_MESSAGES - 1}"
-    )
+    assert session_cipher.message_decrypt(
+        bob_store, alice_address, inflight[TOO_MANY_MESSAGES - 1]
+    ) == f"It's over {TOO_MANY_MESSAGES - 1}".encode("utf8")
 
     with pytest.raises(Exception, match="message with old counter"):
         session_cipher.message_decrypt(bob_store, alice_address, inflight[5])
@@ -644,9 +640,11 @@ def test_basic_simultaneous_initiate():
         alice_pre_key_bundle,
     )
 
-    message_for_bob = session_cipher.message_encrypt(alice_store, bob_address, "hi bob")
+    message_for_bob = session_cipher.message_encrypt(
+        alice_store, bob_address, b"hi bob"
+    )
     message_for_alice = session_cipher.message_encrypt(
-        bob_store, alice_address, "hi alice"
+        bob_store, alice_address, b"hi alice"
     )
 
     assert message_for_bob.message_type() == 3  # 3 == CiphertextMessageType::PreKey
@@ -659,14 +657,14 @@ def test_basic_simultaneous_initiate():
         bob_address,
         protocol.PreKeySignalMessage.try_from(message_for_alice.serialize()),
     )
-    assert alice_plaintext.decode("utf8") == "hi alice"
+    assert alice_plaintext == b"hi alice"
 
     bob_plaintext = session_cipher.message_decrypt(
         bob_store,
         alice_address,
         protocol.PreKeySignalMessage.try_from(message_for_bob.serialize()),
     )
-    assert bob_plaintext.decode("utf8") == "hi bob"
+    assert bob_plaintext == b"hi bob"
 
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
     assert bob_store.load_session(alice_address).session_state().session_version() == 3
@@ -674,7 +672,7 @@ def test_basic_simultaneous_initiate():
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     alice_response = session_cipher.message_encrypt(
-        alice_store, bob_address, "nice to see you"
+        alice_store, bob_address, b"nice to see you"
     )
 
     assert alice_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
@@ -685,11 +683,11 @@ def test_basic_simultaneous_initiate():
         protocol.SignalMessage.try_from(alice_response.serialize()),
     )
 
-    assert response_plaintext.decode("utf8") == "nice to see you"
+    assert response_plaintext == b"nice to see you"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     bob_response = session_cipher.message_encrypt(
-        bob_store, alice_address, "you as well"
+        bob_store, alice_address, b"you as well"
     )
     assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
@@ -698,7 +696,7 @@ def test_basic_simultaneous_initiate():
         bob_address,
         protocol.SignalMessage.try_from(bob_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "you as well"
+    assert response_plaintext == b"you as well"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
 
@@ -731,9 +729,11 @@ def test_simultaneous_initiate_with_lossage():
         alice_pre_key_bundle,
     )
 
-    message_for_bob = session_cipher.message_encrypt(alice_store, bob_address, "hi bob")
+    message_for_bob = session_cipher.message_encrypt(
+        alice_store, bob_address, b"hi bob"
+    )
     message_for_alice = session_cipher.message_encrypt(
-        bob_store, alice_address, "hi alice"
+        bob_store, alice_address, b"hi alice"
     )
 
     assert message_for_bob.message_type() == 3  # 3 == CiphertextMessageType::PreKey
@@ -746,13 +746,13 @@ def test_simultaneous_initiate_with_lossage():
         alice_address,
         protocol.PreKeySignalMessage.try_from(message_for_bob.serialize()),
     )
-    assert bob_plaintext.decode("utf8") == "hi bob"
+    assert bob_plaintext == b"hi bob"
 
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
     assert bob_store.load_session(alice_address).session_state().session_version() == 3
 
     alice_response = session_cipher.message_encrypt(
-        alice_store, bob_address, "nice to see you"
+        alice_store, bob_address, b"nice to see you"
     )
 
     assert alice_response.message_type() == 3  # 3 == CiphertextMessageType::PreKey
@@ -762,12 +762,12 @@ def test_simultaneous_initiate_with_lossage():
         alice_address,
         protocol.PreKeySignalMessage.try_from(alice_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "nice to see you"
+    assert response_plaintext == b"nice to see you"
 
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     bob_response = session_cipher.message_encrypt(
-        bob_store, alice_address, "you as well"
+        bob_store, alice_address, b"you as well"
     )
     assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
@@ -776,7 +776,7 @@ def test_simultaneous_initiate_with_lossage():
         bob_address,
         protocol.SignalMessage.try_from(bob_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "you as well"
+    assert response_plaintext == b"you as well"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
 
@@ -809,9 +809,11 @@ def test_simultaneous_initiate_lost_message():
         alice_pre_key_bundle,
     )
 
-    message_for_bob = session_cipher.message_encrypt(alice_store, bob_address, "hi bob")
+    message_for_bob = session_cipher.message_encrypt(
+        alice_store, bob_address, b"hi bob"
+    )
     message_for_alice = session_cipher.message_encrypt(
-        bob_store, alice_address, "hi alice"
+        bob_store, alice_address, b"hi alice"
     )
 
     assert message_for_bob.message_type() == 3  # 3 == CiphertextMessageType::PreKey
@@ -824,14 +826,14 @@ def test_simultaneous_initiate_lost_message():
         bob_address,
         protocol.PreKeySignalMessage.try_from(message_for_alice.serialize()),
     )
-    assert alice_plaintext.decode("utf8") == "hi alice"
+    assert alice_plaintext == b"hi alice"
 
     bob_plaintext = session_cipher.message_decrypt(
         bob_store,
         alice_address,
         protocol.PreKeySignalMessage.try_from(message_for_bob.serialize()),
     )
-    assert bob_plaintext.decode("utf8") == "hi bob"
+    assert bob_plaintext == b"hi bob"
 
     assert alice_store.load_session(bob_address).session_state().session_version() == 3
     assert bob_store.load_session(alice_address).session_state().session_version() == 3
@@ -839,14 +841,14 @@ def test_simultaneous_initiate_lost_message():
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     alice_response = session_cipher.message_encrypt(
-        alice_store, bob_address, "nice to see you"
+        alice_store, bob_address, b"nice to see you"
     )
     assert alice_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     bob_response = session_cipher.message_encrypt(
-        bob_store, alice_address, "you as well"
+        bob_store, alice_address, b"you as well"
     )
     assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
@@ -855,7 +857,7 @@ def test_simultaneous_initiate_lost_message():
         bob_address,
         protocol.SignalMessage.try_from(bob_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "you as well"
+    assert response_plaintext == b"you as well"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
 
@@ -890,10 +892,10 @@ def test_simultaneous_initiate_repeated_messages():
         )
 
         message_for_bob = session_cipher.message_encrypt(
-            alice_store, bob_address, "hi bob"
+            alice_store, bob_address, b"hi bob"
         )
         message_for_alice = session_cipher.message_encrypt(
-            bob_store, alice_address, "hi alice"
+            bob_store, alice_address, b"hi alice"
         )
 
         assert message_for_bob.message_type() == 3  # 3 == CiphertextMessageType::PreKey
@@ -910,14 +912,14 @@ def test_simultaneous_initiate_repeated_messages():
             bob_address,
             protocol.PreKeySignalMessage.try_from(message_for_alice.serialize()),
         )
-        assert alice_plaintext.decode("utf8") == "hi alice"
+        assert alice_plaintext == b"hi alice"
 
         bob_plaintext = session_cipher.message_decrypt(
             bob_store,
             alice_address,
             protocol.PreKeySignalMessage.try_from(message_for_bob.serialize()),
         )
-        assert bob_plaintext.decode("utf8") == "hi bob"
+        assert bob_plaintext == b"hi bob"
 
         assert (
             alice_store.load_session(bob_address).session_state().session_version() == 3
@@ -932,10 +934,10 @@ def test_simultaneous_initiate_repeated_messages():
 
     for _ in range(50):
         message_for_bob = session_cipher.message_encrypt(
-            alice_store, bob_address, "hi bob"
+            alice_store, bob_address, b"hi bob"
         )
         message_for_alice = session_cipher.message_encrypt(
-            bob_store, alice_address, "hi alice"
+            bob_store, alice_address, b"hi alice"
         )
 
         assert (
@@ -954,14 +956,14 @@ def test_simultaneous_initiate_repeated_messages():
             bob_address,
             protocol.SignalMessage.try_from(message_for_alice.serialize()),
         )
-        assert alice_plaintext.decode("utf8") == "hi alice"
+        assert alice_plaintext == b"hi alice"
 
         bob_plaintext = session_cipher.message_decrypt(
             bob_store,
             alice_address,
             protocol.SignalMessage.try_from(message_for_bob.serialize()),
         )
-        assert bob_plaintext.decode("utf8") == "hi bob"
+        assert bob_plaintext == b"hi bob"
 
         assert (
             alice_store.load_session(bob_address).session_state().session_version() == 3
@@ -975,7 +977,7 @@ def test_simultaneous_initiate_repeated_messages():
         )
 
     alice_response = session_cipher.message_encrypt(
-        alice_store, bob_address, "nice to see you"
+        alice_store, bob_address, b"nice to see you"
     )
 
     assert alice_response.message_type() == 2  # 2 == CiphertextMessageType::Whisper
@@ -983,7 +985,7 @@ def test_simultaneous_initiate_repeated_messages():
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     bob_response = session_cipher.message_encrypt(
-        bob_store, alice_address, "you as well"
+        bob_store, alice_address, b"you as well"
     )
     assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
@@ -992,7 +994,7 @@ def test_simultaneous_initiate_repeated_messages():
         bob_address,
         protocol.SignalMessage.try_from(bob_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "you as well"
+    assert response_plaintext == b"you as well"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
 
@@ -1020,7 +1022,7 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
     )
 
     lost_message_for_bob = session_cipher.message_encrypt(
-        alice_store, bob_address, "it was so long ago"
+        alice_store, bob_address, b"it was so long ago"
     )
 
     for _ in range(15):
@@ -1039,10 +1041,10 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         )
 
         message_for_bob = session_cipher.message_encrypt(
-            alice_store, bob_address, "hi bob"
+            alice_store, bob_address, b"hi bob"
         )
         message_for_alice = session_cipher.message_encrypt(
-            bob_store, alice_address, "hi alice"
+            bob_store, alice_address, b"hi alice"
         )
 
         assert message_for_bob.message_type() == 3  # 3 == CiphertextMessageType::PreKey
@@ -1059,14 +1061,14 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
             bob_address,
             protocol.PreKeySignalMessage.try_from(message_for_alice.serialize()),
         )
-        assert alice_plaintext.decode("utf8") == "hi alice"
+        assert alice_plaintext == b"hi alice"
 
         bob_plaintext = session_cipher.message_decrypt(
             bob_store,
             alice_address,
             protocol.PreKeySignalMessage.try_from(message_for_bob.serialize()),
         )
-        assert bob_plaintext.decode("utf8") == "hi bob"
+        assert bob_plaintext == b"hi bob"
 
         assert (
             alice_store.load_session(bob_address).session_state().session_version() == 3
@@ -1081,10 +1083,10 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
 
     for _ in range(50):
         message_for_bob = session_cipher.message_encrypt(
-            alice_store, bob_address, "hi bob"
+            alice_store, bob_address, b"hi bob"
         )
         message_for_alice = session_cipher.message_encrypt(
-            bob_store, alice_address, "hi alice"
+            bob_store, alice_address, b"hi alice"
         )
 
         assert (
@@ -1103,14 +1105,14 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
             bob_address,
             protocol.SignalMessage.try_from(message_for_alice.serialize()),
         )
-        assert alice_plaintext.decode("utf8") == "hi alice"
+        assert alice_plaintext == b"hi alice"
 
         bob_plaintext = session_cipher.message_decrypt(
             bob_store,
             alice_address,
             protocol.SignalMessage.try_from(message_for_bob.serialize()),
         )
-        assert bob_plaintext.decode("utf8") == "hi bob"
+        assert bob_plaintext == b"hi bob"
 
         assert (
             alice_store.load_session(bob_address).session_state().session_version() == 3
@@ -1124,7 +1126,7 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         )
 
     alice_response = session_cipher.message_encrypt(
-        alice_store, bob_address, "nice to see you"
+        alice_store, bob_address, b"nice to see you"
     )
 
     assert alice_response.message_type() == 2  # 2 == CiphertextMessageType::Whisper
@@ -1132,7 +1134,7 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     bob_response = session_cipher.message_encrypt(
-        bob_store, alice_address, "you as well"
+        bob_store, alice_address, b"you as well"
     )
     assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
@@ -1141,7 +1143,7 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         bob_address,
         protocol.SignalMessage.try_from(bob_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "you as well"
+    assert response_plaintext == b"you as well"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
     blast_from_the_past = session_cipher.message_decrypt(
@@ -1149,11 +1151,13 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         alice_address,
         protocol.PreKeySignalMessage.try_from(lost_message_for_bob.serialize()),
     )
-    assert blast_from_the_past.decode("utf8") == "it was so long ago"
+    assert blast_from_the_past == b"it was so long ago"
 
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
-    bob_response = session_cipher.message_encrypt(bob_store, alice_address, "so it was")
+    bob_response = session_cipher.message_encrypt(
+        bob_store, alice_address, b"so it was"
+    )
     assert bob_response.message_type() == 2  # CiphertextMessageType::Whisper => 2
 
     response_plaintext = session_cipher.message_decrypt(
@@ -1161,5 +1165,88 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         bob_address,
         protocol.SignalMessage.try_from(bob_response.serialize()),
     )
-    assert response_plaintext.decode("utf8") == "so it was"
+    assert response_plaintext == b"so it was"
     assert is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
+
+
+def test_basic_large_message():
+    alice_address = address.ProtocolAddress("+14151111111", DEVICE_ID)
+    bob_address = address.ProtocolAddress("+14151111112", DEVICE_ID)
+
+    alice_identity_key_pair = identity_key.IdentityKeyPair.generate()
+    bob_identity_key_pair = identity_key.IdentityKeyPair.generate()
+
+    alice_registration_id = 1  # TODO: generate these
+    bob_registration_id = 2
+
+    alice_store = storage.InMemSignalProtocolStore(
+        alice_identity_key_pair, alice_registration_id
+    )
+    bob_store = storage.InMemSignalProtocolStore(
+        bob_identity_key_pair, bob_registration_id
+    )
+
+    bob_pre_key_pair = curve.KeyPair.generate()
+    bob_signed_pre_key_pair = curve.KeyPair.generate()
+
+    bob_signed_pre_key_public = bob_signed_pre_key_pair.public_key().serialize()
+
+    bob_signed_pre_key_signature = (
+        bob_store.get_identity_key_pair()
+        .private_key()
+        .calculate_signature(bob_signed_pre_key_public)
+    )
+
+    pre_key_id = 31337
+    signed_pre_key_id = 22
+
+    bob_pre_key_bundle = state.PreKeyBundle(
+        bob_store.get_local_registration_id(),
+        DEVICE_ID,
+        pre_key_id,
+        bob_pre_key_pair.public_key(),
+        signed_pre_key_id,
+        bob_signed_pre_key_pair.public_key(),
+        bob_signed_pre_key_signature,
+        bob_store.get_identity_key_pair().identity_key(),
+    )
+
+    assert alice_store.load_session(bob_address) is None
+
+    # Below standalone function would make more sense as a method on alice_store?
+    session.process_prekey_bundle(
+        bob_address,
+        alice_store,
+        bob_pre_key_bundle,
+    )
+
+    assert alice_store.load_session(bob_address)
+    assert alice_store.load_session(bob_address).session_state().session_version() == 3
+
+    original_message = bytes(1024 * 1000)  # 1 MB empty attachment
+
+    outgoing_message = session_cipher.message_encrypt(
+        alice_store, bob_address, original_message
+    )
+    outgoing_message.message_type() == 3  # 3 == CiphertextMessageType::PreKey
+    outgoing_message_wire = outgoing_message.serialize()
+
+    incoming_message = protocol.PreKeySignalMessage.try_from(outgoing_message_wire)
+
+    bob_prekey = state.PreKeyRecord(pre_key_id, bob_pre_key_pair)
+    bob_store.save_pre_key(pre_key_id, bob_prekey)
+
+    signed_prekey = state.SignedPreKeyRecord(
+        signed_pre_key_id,
+        42,
+        bob_signed_pre_key_pair,
+        bob_signed_pre_key_signature,
+    )
+
+    bob_store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
+
+    plaintext = session_cipher.message_decrypt(
+        bob_store, alice_address, incoming_message
+    )
+
+    assert original_message == plaintext

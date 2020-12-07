@@ -13,10 +13,10 @@ use crate::storage::InMemSignalProtocolStore;
 pub fn message_encrypt(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
-    msg: &str,
+    msg: &[u8],
 ) -> Result<CiphertextMessage, SignalProtocolError> {
     let ciphertext = libsignal_protocol_rust::message_encrypt(
-        msg.as_bytes(),
+        msg,
         &remote_address.state,
         &mut protocol_store.store.session_store,
         &mut protocol_store.store.identity_store,
