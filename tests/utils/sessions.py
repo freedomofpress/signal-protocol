@@ -21,99 +21,80 @@ def run_interaction(
     bob_address: address.ProtocolAddress,
 ):
 
-    alice_ptext = "It's rabbit season"
+    alice_ptext = b"It's rabbit season"
     alice_message = session_cipher.message_encrypt(
         alice_store, bob_address, alice_ptext
     )
 
     assert alice_message.message_type() == 2  # CiphertextMessageType::Whisper => 2
     assert (
-        session_cipher.message_decrypt(bob_store, alice_address, alice_message).decode(
-            "utf8"
-        )
+        session_cipher.message_decrypt(bob_store, alice_address, alice_message)
         == alice_ptext
     )
 
-    bob_ptext = "It's duck season"
+    bob_ptext = b"It's duck season"
     bob_message = session_cipher.message_encrypt(bob_store, alice_address, bob_ptext)
 
     assert bob_message.message_type() == 2  # CiphertextMessageType::Whisper => 2
     assert (
-        session_cipher.message_decrypt(alice_store, bob_address, bob_message).decode(
-            "utf8"
-        )
+        session_cipher.message_decrypt(alice_store, bob_address, bob_message)
         == bob_ptext
     )
 
     for i in range(10):
         alice_ptext = f"A->B message {i}"
         alice_message = session_cipher.message_encrypt(
-            alice_store, bob_address, alice_ptext
+            alice_store, bob_address, alice_ptext.encode("utf8")
         )
         assert alice_message.message_type() == 2  # CiphertextMessageType::Whisper => 2
-        assert (
-            session_cipher.message_decrypt(
-                bob_store, alice_address, alice_message
-            ).decode("utf8")
-            == alice_ptext
-        )
+        assert session_cipher.message_decrypt(
+            bob_store, alice_address, alice_message
+        ) == alice_ptext.encode("utf8")
 
     for i in range(10):
         bob_ptext = f"B->A message {i}"
         bob_message = session_cipher.message_encrypt(
-            bob_store, alice_address, bob_ptext
+            bob_store, alice_address, bob_ptext.encode("utf8")
         )
         assert bob_message.message_type() == 2  # CiphertextMessageType::Whisper => 2
-        assert (
-            session_cipher.message_decrypt(
-                alice_store, bob_address, bob_message
-            ).decode("utf8")
-            == bob_ptext
-        )
+        assert session_cipher.message_decrypt(
+            alice_store, bob_address, bob_message
+        ) == bob_ptext.encode("utf8")
 
     alice_ooo_messages = []
 
     for i in range(10):
         alice_ptext = f"A->B OOO message {i}"
         alice_message = session_cipher.message_encrypt(
-            alice_store, bob_address, alice_ptext
+            alice_store, bob_address, alice_ptext.encode("utf8")
         )
         alice_ooo_messages.append((alice_ptext, alice_message))
 
     for i in range(10):
         alice_ptext = f"A->B post-OOO message {i}"
         alice_message = session_cipher.message_encrypt(
-            alice_store, bob_address, alice_ptext
+            alice_store, bob_address, alice_ptext.encode("utf8")
         )
         assert alice_message.message_type() == 2  # CiphertextMessageType::Whisper => 2
-        assert (
-            session_cipher.message_decrypt(
-                bob_store, alice_address, alice_message
-            ).decode("utf8")
-            == alice_ptext
-        )
+        assert session_cipher.message_decrypt(
+            bob_store, alice_address, alice_message
+        ) == alice_ptext.encode("utf8")
 
     for i in range(10):
         bob_ptext = f"B->A message post-OOO {i}"
         bob_message = session_cipher.message_encrypt(
-            bob_store, alice_address, bob_ptext
+            bob_store, alice_address, bob_ptext.encode("utf8")
         )
         assert bob_message.message_type() == 2  # CiphertextMessageType::Whisper => 2
-        assert (
-            session_cipher.message_decrypt(
-                alice_store, bob_address, bob_message
-            ).decode("utf8")
-            == bob_ptext
-        )
+        assert session_cipher.message_decrypt(
+            alice_store, bob_address, bob_message
+        ) == bob_ptext.encode("utf8")
 
     ## Now we check that messages can be decrypted when delivered out of order
     for (ptext, ctext) in alice_ooo_messages:
-        assert (
-            session_cipher.message_decrypt(bob_store, alice_address, ctext).decode(
-                "utf8"
-            )
-            == ptext
-        )
+        assert session_cipher.message_decrypt(
+            bob_store, alice_address, ctext
+        ) == ptext.encode("utf8")
 
 
 def initialize_sessions_v3():
@@ -170,16 +151,16 @@ def run_session_interaction(alice_session, bob_session):
     alice_store.store_session(bob_address, alice_session)
     bob_store.store_session(alice_address, bob_session)
 
-    alice_plaintext = "This is Alice's message"
+    alice_plaintext = b"This is Alice's message"
     alice_ciphertext = session_cipher.message_encrypt(
         alice_store, bob_address, alice_plaintext
     )
     bob_decrypted = session_cipher.message_decrypt(
         bob_store, alice_address, alice_ciphertext
     )
-    assert bob_decrypted.decode("utf8") == alice_plaintext
+    assert bob_decrypted == alice_plaintext
 
-    bob_plaintext = "This is Bob's reply"
+    bob_plaintext = b"This is Bob's reply"
 
     bob_ciphertext = session_cipher.message_encrypt(
         bob_store, alice_address, bob_plaintext
@@ -187,7 +168,7 @@ def run_session_interaction(alice_session, bob_session):
     alice_decrypted = session_cipher.message_decrypt(
         alice_store, bob_address, bob_ciphertext
     )
-    assert alice_decrypted.decode("utf8") == bob_plaintext
+    assert alice_decrypted == bob_plaintext
 
     ALICE_MESSAGE_COUNT = 50
     BOB_MESSAGE_COUNT = 50
@@ -196,7 +177,9 @@ def run_session_interaction(alice_session, bob_session):
 
     for i in range(ALICE_MESSAGE_COUNT):
         ptext = f"смерть за смерть {i}"
-        ctext = session_cipher.message_encrypt(alice_store, bob_address, ptext)
+        ctext = session_cipher.message_encrypt(
+            alice_store, bob_address, ptext.encode("utf8")
+        )
         alice_messages.append((ptext, ctext))
 
     random.shuffle(alice_messages)
@@ -211,7 +194,9 @@ def run_session_interaction(alice_session, bob_session):
 
     for i in range(BOB_MESSAGE_COUNT):
         ptext = f"Relax in the safety of your own delusions. {i}"
-        ctext = session_cipher.message_encrypt(bob_store, alice_address, ptext)
+        ctext = session_cipher.message_encrypt(
+            bob_store, alice_address, ptext.encode("utf8")
+        )
         bob_messages.append((ptext, ctext))
 
     random.shuffle(bob_messages)
