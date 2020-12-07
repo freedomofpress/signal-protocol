@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use pyo3::wrap_pyfunction;
 
 use crate::curve::{KeyPair, PrivateKey, PublicKey};
 use crate::error::SignalProtocolError;
@@ -144,6 +145,31 @@ impl PreKeyRecord {
         let result = self.state.serialize()?;
         Ok(PyBytes::new(py, &result).into())
     }
+}
+
+/// Helper function for generating N prekeys.
+/// Returns a list of PreKeyRecords.
+///
+/// # Example
+///
+/// ```
+/// from signal_protocol import curve, state
+///
+/// prekeyid = 1
+/// manykeys = state.generate_n_prekeys(100, prekeyid)  # generates 100 keys
+/// ```
+#[pyfunction]
+pub fn generate_n_prekeys(n: u16, id: PreKeyId) -> Vec<PreKeyRecord> {
+    let mut keyvec: Vec<PreKeyRecord> = Vec::new();
+    let mut i: u32 = id;
+    for _n in 0..n {
+        let keypair = KeyPair::generate();
+        let prekey = PreKeyRecord::new(i, &keypair);
+        keyvec.push(prekey);
+        i += 1;
+    }
+
+    keyvec
 }
 
 #[pyclass]
@@ -558,5 +584,6 @@ pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<SessionRecord>()?;
     module.add_class::<SessionState>()?;
     module.add_class::<SignedPreKeyRecord>()?;
+    module.add_function(wrap_pyfunction!(generate_n_prekeys, module)?).unwrap();
     Ok(())
 }

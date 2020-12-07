@@ -34,7 +34,7 @@ impl KeyPair {
     }
 
     #[staticmethod]
-    fn generate() -> Self {
+    pub fn generate() -> Self {
         let mut csprng = OsRng;
         let keypair = libsignal_protocol_rust::KeyPair::generate(&mut csprng);
         KeyPair { key: keypair }
