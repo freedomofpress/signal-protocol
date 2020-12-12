@@ -117,7 +117,7 @@ Once the prekey bundle is processed (storing data from the recipient in your loc
 protocol store), you can encrypt messages:
 
 ```py
-ciphertext = session_cipher.message_encrypt(store, recipient_address, "hello")
+ciphertext = session_cipher.message_encrypt(store, recipient_address, b"hello")
 ```
 
 ## Developer Getting Started
