@@ -50,7 +50,6 @@ pre_key_pair = curve.KeyPair.generate()
 ```
 
 Clients must generate a registration_id and store it somewhere safe and persistent.
-<!-- is this the device id? -->
 
 ```py
 registration_id = 12  # TODO generate (not yet supported in upstream crate)
