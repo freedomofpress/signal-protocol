@@ -44,7 +44,6 @@ identity_key_pair = identity_key.IdentityKeyPair.generate()
 Clients must generate prekeys.
 The example generates a single prekey.
 In practice, clients will generate many prekeys, as they are one-time use and consumed when a message from a new chat participant is sent.
-(A helper function to create *n* prekeys is [forthcoming](https://github.com/freedomofpress/signal-protocol/pull/14) in a PR.)
 
 ```py
 pre_key_pair = curve.KeyPair.generate()
