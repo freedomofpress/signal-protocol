@@ -19,6 +19,7 @@ from signal_protocol import (
     state,
     storage,
 )
+from signal_protocol.error import SignalProtocolException
 
 DEVICE_ID = 1
 
@@ -182,7 +183,7 @@ def test_basic_prekey_v3():
         alice_store, bob_address, original_message
     )
 
-    with pytest.raises(Exception, match="untrusted identity"):
+    with pytest.raises(SignalProtocolException, match="untrusted identity"):
         session_cipher.message_decrypt(bob_store, alice_address, outgoing_message)
 
     assert bob_store.save_identity(
@@ -206,7 +207,7 @@ def test_basic_prekey_v3():
         alice_store.get_identity_key_pair().identity_key(),
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(SignalProtocolException):
         session.process_prekey_bundle(bob_address, alice_store, bob_pre_key_bundle)
 
 
@@ -265,7 +266,7 @@ def test_bad_signed_pre_key_signature():
             bob_store.get_identity_key_pair().identity_key(),
         )
 
-        with pytest.raises(Exception):
+        with pytest.raises(SignalProtocolException):
             session.process_prekey_bundle(bob_address, alice_store, bob_pre_key_bundle)
 
     # Finally check that the non-corrupted signature is accepted:
@@ -472,7 +473,7 @@ def test_bad_message_bundle():
     incoming_message = protocol.PreKeySignalMessage.try_from(corrupted_message)
 
     # This incoming message is corrupted, so we expect an exception to be raised
-    with pytest.raises(Exception):
+    with pytest.raises(SignalProtocolException):
         session_cipher.message_decrypt(bob_store, alice_address, incoming_message)
 
     assert bob_store.get_pre_key(pre_key_id)
@@ -486,7 +487,7 @@ def test_bad_message_bundle():
     assert original_message == plaintext
 
     # Trying to get the prekey will now fail, as the prekey has been used and removed from the store
-    with pytest.raises(Exception, match="invalid prekey identifier"):
+    with pytest.raises(SignalProtocolException, match="invalid prekey identifier"):
         assert bob_store.get_pre_key(pre_key_id)
 
 
@@ -607,7 +608,7 @@ def test_message_key_limits():  # Note: slow test
         bob_store, alice_address, inflight[TOO_MANY_MESSAGES - 1]
     ) == f"It's over {TOO_MANY_MESSAGES - 1}".encode("utf8")
 
-    with pytest.raises(Exception, match="message with old counter"):
+    with pytest.raises(SignalProtocolException, match="message with old counter"):
         session_cipher.message_decrypt(bob_store, alice_address, inflight[5])
 
 
