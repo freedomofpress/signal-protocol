@@ -2,6 +2,7 @@ import pytest
 import random
 
 from signal_protocol.address import ProtocolAddress
+from signal_protocol.error import SignalProtocolException
 from signal_protocol.group_cipher import (
     create_sender_key_distribution_message,
     group_decrypt,
@@ -27,7 +28,7 @@ def test_group_no_send_session():
         alice_identity_key_pair, alice_registration_id
     )
 
-    with pytest.raises(Exception, match="invalid send key id"):
+    with pytest.raises(SignalProtocolException, match="invalid send key id"):
         group_encrypt(alice_store, group_sender, "hello".encode("utf8"))
 
 
@@ -84,7 +85,7 @@ def test_group_no_recv_session():
 
     alice_ciphertext = group_encrypt(alice_store, group_sender, "hello".encode("utf8"))
 
-    with pytest.raises(Exception, match="invalid send key id"):
+    with pytest.raises(SignalProtocolException, match="invalid send key id"):
         bob_plaintext = group_decrypt(alice_ciphertext, bob_store, group_sender)
 
 
@@ -157,7 +158,7 @@ def test_group_basic_ratchet():
     bob_plaintext1 = group_decrypt(alice_ciphertext_1, bob_store, group_sender)
     assert bob_plaintext1.decode("utf8") == "message 1"
 
-    with pytest.raises(Exception, match="message with old counter 1 / 0"):
+    with pytest.raises(SignalProtocolException, match="message with old counter 1 / 0"):
         bob_plaintext1 = group_decrypt(alice_ciphertext_1, bob_store, group_sender)
 
     bob_plaintext2 = group_decrypt(alice_ciphertext_2, bob_store, group_sender)
@@ -271,7 +272,7 @@ def test_group_too_far_in_the_future():
         alice_store, group_sender, "hello????".encode("utf8")
     )
 
-    with pytest.raises(Exception, match="message from too far into the future"):
+    with pytest.raises(SignalProtocolException, match="message from too far into the future"):
         assert group_decrypt(alice_ciphertext, bob_store, group_sender)
 
 
@@ -315,5 +316,5 @@ def test_group_message_key_limit():
         == "too many msg"
     )
 
-    with pytest.raises(Exception, match="message with old counter"):
+    with pytest.raises(SignalProtocolException, match="message with old counter"):
         assert group_decrypt(ciphertexts[0], bob_store, group_sender).decode("utf8")
