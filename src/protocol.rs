@@ -35,7 +35,7 @@ impl CiphertextMessage {
     }
 
     pub fn message_type(&self) -> u8 {
-        self.data.message_type().encoding()
+        self.data.message_type() as u8
     }
 }
 

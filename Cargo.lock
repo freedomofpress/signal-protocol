@@ -316,7 +316,7 @@ checksum = "2448f6066e80e3bfc792e9c98bf705b4b0fc6e8ef5b43e5889aff0eaa9c58743"
 [[package]]
 name = "libsignal-protocol-rust"
 version = "0.1.0"
-source = "git+https://github.com/freedomofpress/libsignal-client?rev=c1331eb42f71184996e3994b52023a40ec47c0dd#c1331eb42f71184996e3994b52023a40ec47c0dd"
+source = "git+https://github.com/freedomofpress/libsignal-client?rev=c1ffb1b805e98a6976e97e345de4649b34aeb51b#c1ffb1b805e98a6976e97e345de4649b34aeb51b"
 dependencies = [
  "aes",
  "arrayref",
