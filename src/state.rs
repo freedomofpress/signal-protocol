@@ -584,6 +584,8 @@ pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<SessionRecord>()?;
     module.add_class::<SessionState>()?;
     module.add_class::<SignedPreKeyRecord>()?;
-    module.add_function(wrap_pyfunction!(generate_n_prekeys, module)?).unwrap();
+    module
+        .add_function(wrap_pyfunction!(generate_n_prekeys, module)?)
+        .unwrap();
     Ok(())
 }

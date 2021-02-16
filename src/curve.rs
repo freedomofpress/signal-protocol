@@ -112,6 +112,10 @@ impl PublicKey {
         PyBytes::new(py, &self.key.serialize()).into()
     }
 
+    pub fn public_key_bytes(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        Ok(PyBytes::new(py, &self.key.public_key_bytes()?).into())
+    }
+
     pub fn verify_signature(
         &self,
         message: &[u8],
