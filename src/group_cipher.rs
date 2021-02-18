@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
+use futures::executor::block_on;
 use rand::rngs::OsRng;
 
 use crate::error::SignalProtocolError;
@@ -17,13 +18,13 @@ pub fn group_encrypt(
     plaintext: &[u8],
 ) -> Result<PyObject, SignalProtocolError> {
     let mut csprng = OsRng;
-    let ciphertext = libsignal_protocol_rust::group_encrypt(
+    let ciphertext = block_on(libsignal_protocol_rust::group_encrypt(
         &mut protocol_store.store.sender_key_store,
         &sender_key_id.state,
         plaintext,
         &mut csprng,
         None,
-    )?;
+    ))?;
     Ok(PyBytes::new(py, &ciphertext).into())
 }
 
@@ -34,12 +35,12 @@ pub fn group_decrypt(
     protocol_store: &mut InMemSignalProtocolStore,
     sender_key_id: &SenderKeyName,
 ) -> Result<PyObject, SignalProtocolError> {
-    let plaintext = libsignal_protocol_rust::group_decrypt(
+    let plaintext = block_on(libsignal_protocol_rust::group_decrypt(
         skm_bytes,
         &mut protocol_store.store.sender_key_store,
         &sender_key_id.state,
         None,
-    )?;
+    ))?;
     Ok(PyBytes::new(py, &plaintext).into())
 }
 
@@ -49,14 +50,14 @@ pub fn process_sender_key_distribution_message(
     skdm: &SenderKeyDistributionMessage,
     protocol_store: &mut InMemSignalProtocolStore,
 ) -> Result<(), SignalProtocolError> {
-    Ok(
+    Ok(block_on(
         libsignal_protocol_rust::process_sender_key_distribution_message(
             &sender_key_name.state,
             &skdm.data,
             &mut protocol_store.store.sender_key_store,
             None,
-        )?,
-    )
+        ),
+    )?)
 }
 
 #[pyfunction]
@@ -65,11 +66,13 @@ pub fn create_sender_key_distribution_message(
     protocol_store: &mut InMemSignalProtocolStore,
 ) -> PyResult<Py<SenderKeyDistributionMessage>> {
     let mut csprng = OsRng;
-    let upstream_data = match libsignal_protocol_rust::create_sender_key_distribution_message(
-        &sender_key_name.state,
-        &mut protocol_store.store.sender_key_store,
-        &mut csprng,
-        None,
+    let upstream_data = match block_on(
+        libsignal_protocol_rust::create_sender_key_distribution_message(
+            &sender_key_name.state,
+            &mut protocol_store.store.sender_key_store,
+            &mut csprng,
+            None,
+        ),
     ) {
         Ok(data) => data,
         Err(err) => return Err(SignalProtocolError::new_err(err)),

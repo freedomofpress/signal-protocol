@@ -1,3 +1,4 @@
+use futures::executor::block_on;
 use pyo3::prelude::*;
 
 use crate::address::ProtocolAddress;
@@ -34,12 +35,14 @@ impl InMemSignalProtocolStore {
 #[pymethods]
 impl InMemSignalProtocolStore {
     fn get_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
-        let key = self.store.identity_store.get_identity_key_pair(None)?;
+        let key = block_on(self.store.identity_store.get_identity_key_pair(None))?;
         Ok(IdentityKeyPair { key })
     }
 
     fn get_local_registration_id(&self) -> Result<u32, SignalProtocolError> {
-        Ok(self.store.identity_store.get_local_registration_id(None)?)
+        Ok(block_on(
+            self.store.identity_store.get_local_registration_id(None),
+        )?)
     }
 
     fn save_identity(
@@ -47,20 +50,18 @@ impl InMemSignalProtocolStore {
         address: &ProtocolAddress,
         identity: &IdentityKey,
     ) -> Result<bool, SignalProtocolError> {
-        Ok(self
-            .store
-            .identity_store
-            .save_identity(&address.state, &identity.key, None)?)
+        Ok(block_on(self.store.identity_store.save_identity(
+            &address.state,
+            &identity.key,
+            None,
+        ))?)
     }
 
     fn get_identity(
         &self,
         address: &ProtocolAddress,
     ) -> Result<Option<IdentityKey>, SignalProtocolError> {
-        let key = self
-            .store
-            .identity_store
-            .get_identity(&address.state, None)?;
+        let key = block_on(self.store.identity_store.get_identity(&address.state, None))?;
 
         match key {
             Some(key) => Ok(Some(IdentityKey { key })),
@@ -76,7 +77,7 @@ impl InMemSignalProtocolStore {
         &self,
         address: &ProtocolAddress,
     ) -> Result<Option<SessionRecord>, SignalProtocolError> {
-        let session = self.store.load_session(&address.state, None)?;
+        let session = block_on(self.store.load_session(&address.state, None))?;
 
         match session {
             None => Ok(None),
@@ -89,8 +90,10 @@ impl InMemSignalProtocolStore {
         address: &ProtocolAddress,
         record: &SessionRecord,
     ) -> Result<(), SignalProtocolError> {
-        self.store
-            .store_session(&address.state, &record.state, None)?;
+        block_on(
+            self.store
+                .store_session(&address.state, &record.state, None),
+        )?;
         Ok(())
     }
 }
@@ -99,7 +102,7 @@ impl InMemSignalProtocolStore {
 #[pymethods]
 impl InMemSignalProtocolStore {
     fn get_pre_key(&self, id: PreKeyId) -> Result<PreKeyRecord, SignalProtocolError> {
-        let state = self.store.pre_key_store.get_pre_key(id, None)?;
+        let state = block_on(self.store.pre_key_store.get_pre_key(id, None))?;
         Ok(PreKeyRecord { state })
     }
 
@@ -108,14 +111,16 @@ impl InMemSignalProtocolStore {
         id: PreKeyId,
         record: &PreKeyRecord,
     ) -> Result<(), SignalProtocolError> {
-        self.store
-            .pre_key_store
-            .save_pre_key(id, &record.state, None)?;
+        block_on(
+            self.store
+                .pre_key_store
+                .save_pre_key(id, &record.state, None),
+        )?;
         Ok(())
     }
 
     fn remove_pre_key(&mut self, id: PreKeyId) -> Result<(), SignalProtocolError> {
-        self.store.pre_key_store.remove_pre_key(id, None)?;
+        block_on(self.store.pre_key_store.remove_pre_key(id, None))?;
         Ok(())
     }
 }
@@ -127,7 +132,7 @@ impl InMemSignalProtocolStore {
         &self,
         id: SignedPreKeyId,
     ) -> Result<SignedPreKeyRecord, SignalProtocolError> {
-        let state = self.store.get_signed_pre_key(id, None)?;
+        let state = block_on(self.store.get_signed_pre_key(id, None))?;
         Ok(SignedPreKeyRecord { state })
     }
 
@@ -136,8 +141,10 @@ impl InMemSignalProtocolStore {
         id: SignedPreKeyId,
         record: &SignedPreKeyRecord,
     ) -> Result<(), SignalProtocolError> {
-        self.store
-            .save_signed_pre_key(id, &record.state.to_owned(), None)?;
+        block_on(
+            self.store
+                .save_signed_pre_key(id, &record.state.to_owned(), None),
+        )?;
         Ok(())
     }
 }
@@ -150,16 +157,18 @@ impl InMemSignalProtocolStore {
         sender_key_name: &SenderKeyName,
         record: &SenderKeyRecord,
     ) -> Result<(), SignalProtocolError> {
-        Ok(self
-            .store
-            .store_sender_key(&sender_key_name.state, &record.state, None)?)
+        Ok(block_on(self.store.store_sender_key(
+            &sender_key_name.state,
+            &record.state,
+            None,
+        ))?)
     }
 
     fn load_sender_key(
         &mut self,
         sender_key_name: &SenderKeyName,
     ) -> Result<Option<SenderKeyRecord>, SignalProtocolError> {
-        match self.store.load_sender_key(&sender_key_name.state, None)? {
+        match block_on(self.store.load_sender_key(&sender_key_name.state, None))? {
             Some(state) => Ok(Some(SenderKeyRecord { state })),
             None => Ok(None),
         }
