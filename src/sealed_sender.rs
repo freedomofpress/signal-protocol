@@ -168,8 +168,68 @@ impl SenderCertificate {
     }
 }
 
+#[pyclass]
+pub struct UnidentifiedSenderMessageContent {
+    pub data: libsignal_protocol_rust::UnidentifiedSenderMessageContent,
+}
+
+#[pymethods]
+impl UnidentifiedSenderMessageContent {
+    #[staticmethod]
+    fn deserialize(data: &[u8]) -> Result<Self, SignalProtocolError> {
+        Ok(UnidentifiedSenderMessageContent {
+            data: libsignal_protocol_rust::UnidentifiedSenderMessageContent::deserialize(data)?,
+        })
+    }
+
+    #[new]
+    fn new(msg_type_value: u8, sender: SenderCertificate, contents: Vec<u8>) -> PyResult<Self> {
+        let msg_enum = match msg_type_value {
+            2 => libsignal_protocol_rust::CiphertextMessageType::Whisper,
+            3 => libsignal_protocol_rust::CiphertextMessageType::PreKey,
+            4 => libsignal_protocol_rust::CiphertextMessageType::SenderKey,
+            5 => libsignal_protocol_rust::CiphertextMessageType::SenderKeyDistribution,
+            _ => {
+                return Err(SignalProtocolError::err_from_str(format!(
+                    "unknown message type: {}",
+                    msg_type_value
+                )))
+            }
+        };
+        match libsignal_protocol_rust::UnidentifiedSenderMessageContent::new(
+            msg_enum,
+            sender.data,
+            contents,
+        ) {
+            Ok(data) => Ok(Self { data }),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
+        }
+    }
+
+    fn msg_type(&self) -> Result<u8, SignalProtocolError> {
+        Ok(self.data.msg_type()? as u8)
+    }
+
+    fn sender(&self) -> Result<SenderCertificate, SignalProtocolError> {
+        Ok(SenderCertificate {
+            data: (self.data.sender()?).clone(),
+        })
+    }
+
+    fn contents(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.data.contents()?;
+        Ok(PyBytes::new(py, &result).into())
+    }
+
+    fn serialized(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.data.serialized()?;
+        Ok(PyBytes::new(py, &result).into())
+    }
+}
+
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<SenderCertificate>()?;
     module.add_class::<ServerCertificate>()?;
+    module.add_class::<UnidentifiedSenderMessageContent>()?;
     Ok(())
 }
