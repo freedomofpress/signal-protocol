@@ -8,6 +8,7 @@ mod group_cipher;
 mod identity_key;
 mod protocol;
 mod ratchet;
+mod sealed_sender;
 mod sender_keys;
 mod session;
 mod session_cipher;
@@ -57,6 +58,10 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
     let ratchet_submod = PyModule::new(py, "ratchet")?;
     ratchet::init_submodule(ratchet_submod)?;
     module.add_submodule(ratchet_submod)?;
+
+    let sealed_sender_submod = PyModule::new(py, "sealed_sender")?;
+    sealed_sender::init_submodule(sealed_sender_submod)?;
+    module.add_submodule(sealed_sender_submod)?;
 
     let sender_keys_submod = PyModule::new(py, "sender_keys")?;
     sender_keys::init_submodule(sender_keys_submod)?;
