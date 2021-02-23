@@ -4,7 +4,7 @@ use pyo3::wrap_pyfunction;
 
 use crate::curve::{KeyPair, PrivateKey, PublicKey};
 use crate::error::SignalProtocolError;
-use crate::identity_key::{IdentityKey, IdentityKeyPair};
+use crate::identity_key::IdentityKey;
 use crate::ratchet::{ChainKey, MessageKeys, RootKey};
 
 // Newtypes from upstream crate not exposed as part of the public API
@@ -402,48 +402,6 @@ impl SessionState {
         self.state
             .set_receiver_chain_key(&sender.key, &chain_key.key)?;
         Ok(())
-    }
-
-    fn set_pending_key_exchange(
-        &mut self,
-        sequence: u32,
-        base_key: &KeyPair,
-        ephemeral_key: &KeyPair,
-        identity_key: &IdentityKeyPair,
-    ) -> Result<(), SignalProtocolError> {
-        self.state.set_pending_key_exchange(
-            sequence,
-            &base_key.key,
-            &ephemeral_key.key,
-            &identity_key.key,
-        )?;
-        Ok(())
-    }
-
-    fn pending_key_exchange_sequence(&self) -> Result<u32, SignalProtocolError> {
-        Ok(self.state.pending_key_exchange_sequence()?)
-    }
-
-    fn pending_key_exchange_base_key(&self) -> Result<KeyPair, SignalProtocolError> {
-        Ok(KeyPair {
-            key: self.state.pending_key_exchange_base_key()?,
-        })
-    }
-
-    fn pending_key_exchange_ratchet_key(&self) -> Result<KeyPair, SignalProtocolError> {
-        Ok(KeyPair {
-            key: self.state.pending_key_exchange_ratchet_key()?,
-        })
-    }
-
-    fn pending_key_exchange_identity_key(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
-        Ok(IdentityKeyPair {
-            key: self.state.pending_key_exchange_identity_key()?,
-        })
-    }
-
-    fn has_pending_key_exchange(&self) -> Result<bool, SignalProtocolError> {
-        Ok(self.state.has_pending_key_exchange()?)
     }
 
     fn set_unacknowledged_pre_key_message(
