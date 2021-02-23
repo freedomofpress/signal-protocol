@@ -227,9 +227,64 @@ impl UnidentifiedSenderMessageContent {
     }
 }
 
+#[pyclass]
+pub struct UnidentifiedSenderMessage {
+    pub data: libsignal_protocol_rust::UnidentifiedSenderMessage,
+}
+
+#[pymethods]
+impl UnidentifiedSenderMessage {
+    #[staticmethod]
+    fn deserialize(data: &[u8]) -> Result<Self, SignalProtocolError> {
+        Ok(UnidentifiedSenderMessage {
+            data: libsignal_protocol_rust::UnidentifiedSenderMessage::deserialize(data)?,
+        })
+    }
+
+    #[new]
+    fn new(
+        ephemeral_public: PublicKey,
+        encrypted_static: Vec<u8>,
+        encrypted_message: Vec<u8>,
+    ) -> PyResult<Self> {
+        match libsignal_protocol_rust::UnidentifiedSenderMessage::new(
+            ephemeral_public.key,
+            encrypted_static,
+            encrypted_message,
+        ) {
+            Ok(data) => Ok(Self { data }),
+            Err(err) => Err(SignalProtocolError::new_err(err)),
+        }
+    }
+
+    fn version(&self) -> Result<u8, SignalProtocolError> {
+        Ok(self.data.version()?)
+    }
+
+    fn ephemeral_public(&self) -> Result<PublicKey, SignalProtocolError> {
+        Ok(PublicKey::new(self.data.ephemeral_public()?))
+    }
+
+    fn encrypted_static(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.data.encrypted_static()?;
+        Ok(PyBytes::new(py, &result).into())
+    }
+
+    fn encrypted_message(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.data.encrypted_message()?;
+        Ok(PyBytes::new(py, &result).into())
+    }
+
+    fn serialized(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        let result = self.data.serialized()?;
+        Ok(PyBytes::new(py, &result).into())
+    }
+}
+
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<SenderCertificate>()?;
     module.add_class::<ServerCertificate>()?;
     module.add_class::<UnidentifiedSenderMessageContent>()?;
+    module.add_class::<UnidentifiedSenderMessage>()?;
     Ok(())
 }
