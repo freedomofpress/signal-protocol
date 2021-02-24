@@ -6,6 +6,8 @@ use crate::storage::InMemSignalProtocolStore;
 use futures::executor::block_on;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use pyo3::wrap_pyfunction;
+
 use rand::rngs::OsRng;
 
 #[pyclass]
@@ -281,10 +283,106 @@ impl UnidentifiedSenderMessage {
     }
 }
 
+#[pyclass]
+pub struct SealedSenderDecryptionResult {
+    pub data: libsignal_protocol_rust::SealedSenderDecryptionResult,
+}
+
+#[pymethods]
+impl SealedSenderDecryptionResult {
+    pub fn sender_uuid(&self) -> Option<String> {
+        self.data.sender_uuid.clone()
+    }
+
+    pub fn sender_e164(&self) -> Option<String> {
+        self.data.sender_e164.clone()
+    }
+
+    pub fn device_id(&self) -> u32 {
+        self.data.device_id
+    }
+
+    fn message(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+        Ok(PyBytes::new(py, &self.data.message).into())
+    }
+}
+
+#[pyfunction]
+pub fn sealed_sender_decrypt(
+    ciphertext: &[u8],
+    trust_root: &PublicKey,
+    timestamp: u64,
+    local_e164: Option<String>,
+    local_uuid: Option<String>,
+    local_device_id: u32,
+    protocol_store: &mut InMemSignalProtocolStore,
+) -> PyResult<SealedSenderDecryptionResult> {
+    match block_on(libsignal_protocol_rust::sealed_sender_decrypt(
+        ciphertext,
+        &trust_root.key,
+        timestamp,
+        local_e164,
+        local_uuid,
+        local_device_id,
+        &mut protocol_store.store.identity_store,
+        &mut protocol_store.store.session_store,
+        &mut protocol_store.store.pre_key_store,
+        &mut protocol_store.store.signed_pre_key_store,
+        None,
+    )) {
+        Ok(data) => Ok(SealedSenderDecryptionResult { data }),
+        Err(err) => Err(SignalProtocolError::new_err(err)),
+    }
+}
+
+#[pyfunction]
+pub fn sealed_sender_encrypt(
+    destination: &ProtocolAddress,
+    sender_cert: &SenderCertificate,
+    ptext: &[u8],
+    protocol_store: &mut InMemSignalProtocolStore,
+    py: Python,
+) -> Result<PyObject, SignalProtocolError> {
+    let mut csprng = OsRng;
+    let result = block_on(libsignal_protocol_rust::sealed_sender_encrypt(
+        &destination.state,
+        &sender_cert.data,
+        ptext,
+        &mut protocol_store.store.session_store,
+        &mut protocol_store.store.identity_store,
+        None,
+        &mut csprng,
+    ))?;
+    Ok(PyBytes::new(py, &result).into())
+}
+
+#[pyfunction]
+pub fn sealed_sender_decrypt_to_usmc(
+    ciphertext: &[u8],
+    trust_root: &PublicKey,
+    timestamp: u64,
+    protocol_store: &mut InMemSignalProtocolStore,
+) -> PyResult<UnidentifiedSenderMessageContent> {
+    match block_on(libsignal_protocol_rust::sealed_sender_decrypt_to_usmc(
+        ciphertext,
+        &trust_root.key,
+        timestamp,
+        &mut protocol_store.store.identity_store,
+        None,
+    )) {
+        Ok(data) => Ok(UnidentifiedSenderMessageContent { data }),
+        Err(err) => Err(SignalProtocolError::new_err(err)),
+    }
+}
+
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_class::<SenderCertificate>()?;
     module.add_class::<ServerCertificate>()?;
     module.add_class::<UnidentifiedSenderMessageContent>()?;
     module.add_class::<UnidentifiedSenderMessage>()?;
+    module.add_class::<SealedSenderDecryptionResult>()?;
+    module.add_wrapped(wrap_pyfunction!(sealed_sender_decrypt))?;
+    module.add_wrapped(wrap_pyfunction!(sealed_sender_decrypt_to_usmc))?;
+    module.add_wrapped(wrap_pyfunction!(sealed_sender_encrypt))?;
     Ok(())
 }
