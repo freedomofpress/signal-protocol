@@ -38,6 +38,10 @@ impl SignalProtocolError {
         Self { err }
     }
 
+    pub fn err_from_str(err: String) -> PyErr {
+        SignalProtocolException::new_err(err)
+    }
+
     pub fn new_err(err: libsignal_protocol_rust::SignalProtocolError) -> PyErr {
         let local_error = SignalProtocolError { err };
         SignalProtocolException::new_err(local_error.to_string())

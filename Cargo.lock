@@ -154,6 +154,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctr"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb4a30d54f7443bf3d6191dcd486aca19e67cb3c49fa7a06a319966346707e7f"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
 name = "curve25519-dalek"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -421,13 +430,14 @@ checksum = "2448f6066e80e3bfc792e9c98bf705b4b0fc6e8ef5b43e5889aff0eaa9c58743"
 [[package]]
 name = "libsignal-protocol-rust"
 version = "0.1.0"
-source = "git+https://github.com/freedomofpress/libsignal-client?rev=1c30d6369b6bc80d72d032c6c8f1bcdd7d5f3aca#1c30d6369b6bc80d72d032c6c8f1bcdd7d5f3aca"
+source = "git+https://github.com/freedomofpress/libsignal-client?rev=ee609fe14c17667dcc040169a1fe4dad94e6cd5b#ee609fe14c17667dcc040169a1fe4dad94e6cd5b"
 dependencies = [
  "aes",
  "arrayref",
  "async-trait",
  "block-modes",
  "bytes",
+ "ctr",
  "curve25519-dalek",
  "hmac",
  "prost",
