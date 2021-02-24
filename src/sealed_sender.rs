@@ -359,14 +359,10 @@ pub fn sealed_sender_encrypt(
 #[pyfunction]
 pub fn sealed_sender_decrypt_to_usmc(
     ciphertext: &[u8],
-    trust_root: &PublicKey,
-    timestamp: u64,
     protocol_store: &mut InMemSignalProtocolStore,
 ) -> PyResult<UnidentifiedSenderMessageContent> {
     match block_on(libsignal_protocol_rust::sealed_sender_decrypt_to_usmc(
         ciphertext,
-        &trust_root.key,
-        timestamp,
         &mut protocol_store.store.identity_store,
         None,
     )) {

@@ -7,7 +7,7 @@ license = "AGPL-3.0-only"
 
 [dependencies]
 rand = "0.7.3"
-libsignal-protocol-rust = { git = "https://github.com/freedomofpress/libsignal-client", rev="643a637b3444b12b0f6e8b57776494235614a330" }
+libsignal-protocol-rust = { git = "https://github.com/freedomofpress/libsignal-client", rev="ee609fe14c17667dcc040169a1fe4dad94e6cd5b" }
 pyo3 = { version = "0.12.4", features = ["extension-module"] }
 futures = "0.3.7"
 
