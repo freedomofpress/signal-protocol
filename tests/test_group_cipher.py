@@ -272,7 +272,9 @@ def test_group_too_far_in_the_future():
         alice_store, group_sender, "hello????".encode("utf8")
     )
 
-    with pytest.raises(SignalProtocolException, match="message from too far into the future"):
+    with pytest.raises(
+        SignalProtocolException, match="message from too far into the future"
+    ):
         assert group_decrypt(alice_ciphertext, bob_store, group_sender)
 
 

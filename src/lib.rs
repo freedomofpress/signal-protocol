@@ -94,6 +94,7 @@ fn signal_protocol(py: Python, module: &PyModule) -> PyResult<()> {
         "identity_key",
         "protocol",
         "ratchet",
+        "sealed_sender",
         "sender_keys",
         "session_cipher",
         "session",
