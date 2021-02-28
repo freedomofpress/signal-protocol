@@ -5,7 +5,7 @@ use pyo3::wrap_pyfunction;
 use rand::rngs::OsRng;
 
 use crate::curve::{KeyPair, PrivateKey, PublicKey};
-use crate::error::SignalProtocolError;
+use crate::error::Result;
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::state::SessionRecord;
 
@@ -42,31 +42,31 @@ impl AliceSignalProtocolParameters {
         }
     }
 
-    pub fn our_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
+    pub fn our_identity_key_pair(&self) -> Result<IdentityKeyPair> {
         Ok(IdentityKeyPair {
             key: *self.inner.our_identity_key_pair(),
         })
     }
 
-    pub fn our_base_key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+    pub fn our_base_key_pair(&self) -> Result<KeyPair> {
         Ok(KeyPair {
             key: *self.inner.our_base_key_pair(),
         })
     }
 
-    pub fn their_identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
+    pub fn their_identity_key(&self) -> Result<IdentityKey> {
         Ok(IdentityKey {
             key: *self.inner.their_identity_key(),
         })
     }
 
-    pub fn their_signed_pre_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn their_signed_pre_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: *self.inner.their_signed_pre_key(),
         })
     }
 
-    pub fn their_one_time_pre_key(&self) -> Result<Option<PublicKey>, SignalProtocolError> {
+    pub fn their_one_time_pre_key(&self) -> Result<Option<PublicKey>> {
         let key = match self.inner.their_one_time_pre_key() {
             None => return Ok(None),
             Some(key) => key,
@@ -75,7 +75,7 @@ impl AliceSignalProtocolParameters {
         Ok(Some(PublicKey { key: *key }))
     }
 
-    pub fn their_ratchet_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn their_ratchet_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: *self.inner.their_ratchet_key(),
         })
@@ -85,7 +85,7 @@ impl AliceSignalProtocolParameters {
 #[pyfunction]
 pub fn initialize_alice_session(
     parameters: &AliceSignalProtocolParameters,
-) -> Result<SessionRecord, SignalProtocolError> {
+) -> Result<SessionRecord> {
     let mut csprng = OsRng;
     let state = libsignal_protocol_rust::initialize_alice_session(&parameters.inner, &mut csprng)?;
     Ok(SessionRecord::new(state))
@@ -124,19 +124,19 @@ impl BobSignalProtocolParameters {
         }
     }
 
-    pub fn our_identity_key_pair(&self) -> Result<IdentityKeyPair, SignalProtocolError> {
+    pub fn our_identity_key_pair(&self) -> Result<IdentityKeyPair> {
         Ok(IdentityKeyPair {
             key: *self.inner.our_identity_key_pair(),
         })
     }
 
-    pub fn our_signed_pre_key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+    pub fn our_signed_pre_key_pair(&self) -> Result<KeyPair> {
         Ok(KeyPair {
             key: *self.inner.our_signed_pre_key_pair(),
         })
     }
 
-    pub fn our_one_time_pre_key_pair(&self) -> Result<Option<KeyPair>, SignalProtocolError> {
+    pub fn our_one_time_pre_key_pair(&self) -> Result<Option<KeyPair>> {
         let keypair = match self.inner.our_one_time_pre_key_pair() {
             None => return Ok(None),
             Some(keypair) => keypair,
@@ -145,19 +145,19 @@ impl BobSignalProtocolParameters {
         Ok(Some(KeyPair { key: *keypair }))
     }
 
-    pub fn our_ratchet_key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+    pub fn our_ratchet_key_pair(&self) -> Result<KeyPair> {
         Ok(KeyPair {
             key: *self.inner.our_ratchet_key_pair(),
         })
     }
 
-    pub fn their_identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
+    pub fn their_identity_key(&self) -> Result<IdentityKey> {
         Ok(IdentityKey {
             key: *self.inner.their_identity_key(),
         })
     }
 
-    pub fn their_base_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn their_base_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: *self.inner.their_base_key(),
         })
@@ -167,7 +167,7 @@ impl BobSignalProtocolParameters {
 #[pyfunction]
 pub fn initialize_bob_session(
     parameters: &BobSignalProtocolParameters,
-) -> Result<SessionRecord, SignalProtocolError> {
+) -> Result<SessionRecord> {
     let state = libsignal_protocol_rust::initialize_bob_session(&parameters.inner)?;
     Ok(SessionRecord::new(state))
 }
@@ -189,7 +189,7 @@ impl RootKey {
         &self,
         their_ratchet_key: &PublicKey,
         our_ratchet_key: &PrivateKey,
-    ) -> Result<(RootKey, ChainKey), SignalProtocolError> {
+    ) -> Result<(RootKey, ChainKey)> {
         let result = self
             .key
             .create_chain(&their_ratchet_key.key, &our_ratchet_key.key)?;
@@ -214,13 +214,13 @@ impl ChainKey {
         self.key.index()
     }
 
-    pub fn next_chain_key(&self) -> Result<Self, SignalProtocolError> {
+    pub fn next_chain_key(&self) -> Result<Self> {
         Ok(ChainKey {
             key: self.key.next_chain_key()?,
         })
     }
 
-    pub fn message_keys(&self) -> Result<MessageKeys, SignalProtocolError> {
+    pub fn message_keys(&self) -> Result<MessageKeys> {
         Ok(MessageKeys {
             key: self.key.message_keys()?,
         })

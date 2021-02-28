@@ -6,7 +6,7 @@ use pyo3::types::PyBytes;
 use rand::rngs::OsRng;
 
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 use crate::identity_key::IdentityKey;
 
 /// CiphertextMessage is a Rust enum in the upstream crate. Mapping of enums to Python enums
@@ -246,7 +246,7 @@ impl SignalMessage {
         sender_identity_key: &IdentityKey,
         receiver_identity_key: &IdentityKey,
         mac_key: &[u8],
-    ) -> Result<bool, SignalProtocolError> {
+    ) -> Result<bool> {
         Ok(self.data.verify_mac(
             &sender_identity_key.key,
             &receiver_identity_key.key,
@@ -334,7 +334,7 @@ impl SenderKeyMessage {
         PyBytes::new(py, &self.data.ciphertext()).into()
     }
 
-    pub fn verify_signature(&self, signature_key: &PublicKey) -> Result<bool, SignalProtocolError> {
+    pub fn verify_signature(&self, signature_key: &PublicKey) -> Result<bool> {
         Ok(self.data.verify_signature(&signature_key.key)?)
     }
 }
@@ -407,19 +407,19 @@ impl SenderKeyDistributionMessage {
         self.data.message_version()
     }
 
-    pub fn id(&self) -> Result<u32, SignalProtocolError> {
+    pub fn id(&self) -> Result<u32> {
         Ok(self.data.id()?)
     }
 
-    pub fn iteration(&self) -> Result<u32, SignalProtocolError> {
+    pub fn iteration(&self) -> Result<u32> {
         Ok(self.data.iteration()?)
     }
 
-    pub fn chain_key(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn chain_key(&self, py: Python) -> Result<PyObject> {
         Ok(PyBytes::new(py, &self.data.chain_key()?).into())
     }
 
-    pub fn signing_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn signing_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: *self.data.signing_key()?,
         })

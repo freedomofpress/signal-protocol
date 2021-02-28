@@ -3,7 +3,7 @@ use pyo3::types::PyBytes;
 use pyo3::wrap_pyfunction;
 
 use crate::curve::{KeyPair, PrivateKey, PublicKey};
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 use crate::identity_key::IdentityKey;
 use crate::ratchet::{ChainKey, MessageKeys, RootKey};
 
@@ -54,19 +54,19 @@ impl PreKeyBundle {
         }
     }
 
-    fn registration_id(&self) -> Result<u32, SignalProtocolError> {
+    fn registration_id(&self) -> Result<u32> {
         Ok(self.state.registration_id()?)
     }
 
-    fn device_id(&self) -> Result<u32, SignalProtocolError> {
+    fn device_id(&self) -> Result<u32> {
         Ok(self.state.device_id()?)
     }
 
-    fn pre_key_id(&self) -> Result<Option<PreKeyId>, SignalProtocolError> {
+    fn pre_key_id(&self) -> Result<Option<PreKeyId>> {
         Ok(self.state.pre_key_id()?)
     }
 
-    fn pre_key_public(&self) -> Result<Option<PublicKey>, SignalProtocolError> {
+    fn pre_key_public(&self) -> Result<Option<PublicKey>> {
         let key = self.state.pre_key_public()?;
         match key {
             Some(key) => Ok(Some(PublicKey { key })),
@@ -74,22 +74,22 @@ impl PreKeyBundle {
         }
     }
 
-    fn signed_pre_key_id(&self) -> Result<SignedPreKeyId, SignalProtocolError> {
+    fn signed_pre_key_id(&self) -> Result<SignedPreKeyId> {
         Ok(self.state.signed_pre_key_id()?)
     }
 
-    fn signed_pre_key_public(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn signed_pre_key_public(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: self.state.signed_pre_key_public()?,
         })
     }
 
-    fn signed_pre_key_signature(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn signed_pre_key_signature(&self, py: Python) -> Result<PyObject> {
         let result = self.state.signed_pre_key_signature()?;
         Ok(PyBytes::new(py, result).into())
     }
 
-    fn identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
+    fn identity_key(&self) -> Result<IdentityKey> {
         Ok(IdentityKey {
             key: *self.state.identity_key()?,
         })
@@ -121,27 +121,27 @@ impl PreKeyRecord {
         }
     }
 
-    fn id(&self) -> Result<PreKeyId, SignalProtocolError> {
+    fn id(&self) -> Result<PreKeyId> {
         Ok(self.state.id()?)
     }
 
-    fn key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+    fn key_pair(&self) -> Result<KeyPair> {
         Ok(KeyPair {
             key: self.state.key_pair()?,
         })
     }
 
-    fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: self.state.public_key()?,
         })
     }
 
-    fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+    fn private_key(&self) -> Result<PrivateKey> {
         Ok(PrivateKey::new(self.state.private_key()?))
     }
 
-    fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialize(&self, py: Python) -> Result<PyObject> {
         let result = self.state.serialize()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -199,38 +199,38 @@ impl SignedPreKeyRecord {
         }
     }
 
-    fn id(&self) -> Result<SignedPreKeyId, SignalProtocolError> {
+    fn id(&self) -> Result<SignedPreKeyId> {
         Ok(self.state.id()?)
     }
 
-    fn timestamp(&self) -> Result<u64, SignalProtocolError> {
+    fn timestamp(&self) -> Result<u64> {
         Ok(self.state.timestamp()?)
     }
 
-    fn signature(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn signature(&self, py: Python) -> Result<PyObject> {
         let sig = self.state.signature()?;
         Ok(PyBytes::new(py, &sig).into())
     }
 
-    fn key_pair(&self) -> Result<KeyPair, SignalProtocolError> {
+    fn key_pair(&self) -> Result<KeyPair> {
         Ok(KeyPair {
             key: self.state.key_pair()?,
         })
     }
 
-    fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: self.state.public_key()?,
         })
     }
 
-    fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+    fn private_key(&self) -> Result<PrivateKey> {
         Ok(PrivateKey {
             key: self.state.private_key()?,
         })
     }
 
-    fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialize(&self, py: Python) -> Result<PyObject> {
         let result = self.state.serialize()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -259,21 +259,21 @@ impl SessionState {
         }
     }
 
-    pub fn session_version(&self) -> Result<u32, SignalProtocolError> {
+    pub fn session_version(&self) -> Result<u32> {
         Ok(self.state.session_version()?)
     }
 
-    pub fn alice_base_key(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn alice_base_key(&self, py: Python) -> Result<PyObject> {
         let key = self.state.alice_base_key()?;
         Ok(PyBytes::new(py, key).into())
     }
 
-    pub fn set_alice_base_key(&mut self, key: &[u8]) -> Result<(), SignalProtocolError> {
+    pub fn set_alice_base_key(&mut self, key: &[u8]) -> Result<()> {
         self.state.set_alice_base_key(key)?;
         Ok(())
     }
 
-    fn remote_identity_key(&self) -> Result<Option<IdentityKey>, SignalProtocolError> {
+    fn remote_identity_key(&self) -> Result<Option<IdentityKey>> {
         let key = self.state.remote_identity_key()?;
         match key {
             Some(key) => Ok(Some(IdentityKey { key })),
@@ -281,56 +281,56 @@ impl SessionState {
         }
     }
 
-    fn local_identity_key(&self) -> Result<IdentityKey, SignalProtocolError> {
+    fn local_identity_key(&self) -> Result<IdentityKey> {
         Ok(IdentityKey {
             key: self.state.local_identity_key()?,
         })
     }
 
-    fn previous_counter(&self) -> Result<u32, SignalProtocolError> {
+    fn previous_counter(&self) -> Result<u32> {
         Ok(self.state.previous_counter()?)
     }
 
-    fn set_previous_counter(&mut self, counter: u32) -> Result<(), SignalProtocolError> {
+    fn set_previous_counter(&mut self, counter: u32) -> Result<()> {
         self.state.set_previous_counter(counter)?;
         Ok(())
     }
 
-    fn root_key(&self) -> Result<RootKey, SignalProtocolError> {
+    fn root_key(&self) -> Result<RootKey> {
         Ok(RootKey {
             key: self.state.root_key()?,
         })
     }
 
-    fn set_root_key(&mut self, root_key: &RootKey) -> Result<(), SignalProtocolError> {
+    fn set_root_key(&mut self, root_key: &RootKey) -> Result<()> {
         self.state.set_root_key(&root_key.key)?;
         Ok(())
     }
 
-    fn sender_ratchet_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn sender_ratchet_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: self.state.sender_ratchet_key()?,
         })
     }
 
-    fn sender_ratchet_private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+    fn sender_ratchet_private_key(&self) -> Result<PrivateKey> {
         Ok(PrivateKey {
             key: self.state.sender_ratchet_private_key()?,
         })
     }
 
-    fn has_receiver_chain(&self, sender: &PublicKey) -> Result<bool, SignalProtocolError> {
+    fn has_receiver_chain(&self, sender: &PublicKey) -> Result<bool> {
         Ok(self.state.has_receiver_chain(&sender.key)?)
     }
 
-    fn has_sender_chain(&self) -> Result<bool, SignalProtocolError> {
+    fn has_sender_chain(&self) -> Result<bool> {
         Ok(self.state.has_sender_chain()?)
     }
 
     fn get_receiver_chain_key(
         &self,
         sender: &PublicKey,
-    ) -> Result<Option<ChainKey>, SignalProtocolError> {
+    ) -> Result<Option<ChainKey>> {
         let key = self.state.get_receiver_chain_key(&sender.key)?;
         match key {
             None => Ok(None),
@@ -342,7 +342,7 @@ impl SessionState {
         &mut self,
         sender: &PublicKey,
         chain_key: &ChainKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state.add_receiver_chain(&sender.key, &chain_key.key)?;
         Ok(())
     }
@@ -351,13 +351,13 @@ impl SessionState {
         &mut self,
         sender: &KeyPair,
         next_chain_key: &ChainKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state
             .set_sender_chain(&sender.key, &next_chain_key.key)?;
         Ok(())
     }
 
-    fn get_sender_chain_key(&self) -> Result<ChainKey, SignalProtocolError> {
+    fn get_sender_chain_key(&self) -> Result<ChainKey> {
         Ok(ChainKey {
             key: self.state.get_sender_chain_key()?,
         })
@@ -366,7 +366,7 @@ impl SessionState {
     fn set_sender_chain_key(
         &mut self,
         next_chain_key: &ChainKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state.set_sender_chain_key(&next_chain_key.key)?;
         Ok(())
     }
@@ -375,7 +375,7 @@ impl SessionState {
         &mut self,
         sender: &PublicKey,
         counter: u32,
-    ) -> Result<Option<MessageKeys>, SignalProtocolError> {
+    ) -> Result<Option<MessageKeys>> {
         let key = self.state.get_message_keys(&sender.key, counter)?;
 
         match key {
@@ -388,7 +388,7 @@ impl SessionState {
         &mut self,
         sender: &PublicKey,
         message_keys: &MessageKeys,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state
             .set_message_keys(&sender.key, &message_keys.key)?;
         Ok(())
@@ -398,7 +398,7 @@ impl SessionState {
         &mut self,
         sender: &PublicKey,
         chain_key: &ChainKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state
             .set_receiver_chain_key(&sender.key, &chain_key.key)?;
         Ok(())
@@ -409,7 +409,7 @@ impl SessionState {
         pre_key_id: Option<u32>,
         signed_pre_key_id: u32,
         base_key: &PublicKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state.set_unacknowledged_pre_key_message(
             pre_key_id,
             signed_pre_key_id,
@@ -418,7 +418,7 @@ impl SessionState {
         Ok(())
     }
 
-    fn clear_unacknowledged_pre_key_message(&mut self) -> Result<(), SignalProtocolError> {
+    fn clear_unacknowledged_pre_key_message(&mut self) -> Result<()> {
         self.state.clear_unacknowledged_pre_key_message()?;
         Ok(())
     }
@@ -426,28 +426,28 @@ impl SessionState {
     fn set_remote_registration_id(
         &mut self,
         registration_id: u32,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state.set_remote_registration_id(registration_id)?;
         Ok(())
     }
 
-    fn remote_registration_id(&mut self) -> Result<u32, SignalProtocolError> {
+    fn remote_registration_id(&mut self) -> Result<u32> {
         Ok(self.state.remote_registration_id()?)
     }
 
     fn set_local_registration_id(
         &mut self,
         registration_id: u32,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state.set_local_registration_id(registration_id)?;
         Ok(())
     }
 
-    fn local_registration_id(&mut self) -> Result<u32, SignalProtocolError> {
+    fn local_registration_id(&mut self) -> Result<u32> {
         Ok(self.state.local_registration_id()?)
     }
 
-    fn serialize(&mut self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialize(&mut self, py: Python) -> Result<PyObject> {
         let result = self.state.serialize()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -477,7 +477,7 @@ impl SessionRecord {
         }
     }
 
-    fn session_state(&self) -> Result<SessionState, SignalProtocolError> {
+    fn session_state(&self) -> Result<SessionState> {
         let state = self.state.session_state()?;
         Ok(SessionState {
             state: state.clone(),
@@ -496,11 +496,11 @@ impl SessionRecord {
         &self,
         version: u32,
         alice_base_key: &[u8],
-    ) -> Result<bool, SignalProtocolError> {
+    ) -> Result<bool> {
         Ok(self.state.has_session_state(version, alice_base_key)?)
     }
 
-    fn set_session_state(&mut self, session: SessionState) -> Result<(), SignalProtocolError> {
+    fn set_session_state(&mut self, session: SessionState) -> Result<()> {
         self.state.set_session_state(session.state)?;
         Ok(())
     }
@@ -509,27 +509,27 @@ impl SessionRecord {
         &mut self,
         old_session: usize,
         updated_session: SessionState,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         self.state
             .promote_old_session(old_session, updated_session.state)?;
         Ok(())
     }
 
-    fn is_fresh(&self) -> Result<bool, SignalProtocolError> {
+    fn is_fresh(&self) -> Result<bool> {
         Ok(self.state.is_fresh()?)
     }
 
-    fn promote_state(&mut self, new_state: SessionState) -> Result<(), SignalProtocolError> {
+    fn promote_state(&mut self, new_state: SessionState) -> Result<()> {
         self.state.promote_state(new_state.state)?;
         Ok(())
     }
 
-    fn archive_current_state(&mut self) -> Result<(), SignalProtocolError> {
+    fn archive_current_state(&mut self) -> Result<()> {
         self.state.archive_current_state()?;
         Ok(())
     }
 
-    fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialize(&self, py: Python) -> Result<PyObject> {
         let result = self.state.serialize()?;
         Ok(PyBytes::new(py, &result).into())
     }

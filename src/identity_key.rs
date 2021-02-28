@@ -9,7 +9,7 @@ use pyo3::PyObjectProtocol;
 use rand::rngs::OsRng;
 
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 
 #[pyclass]
 #[derive(Debug, Clone, Copy)]
@@ -29,7 +29,7 @@ impl IdentityKey {
         }
     }
 
-    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey::deserialize(&self.key.public_key().serialize())?)
     }
 
@@ -86,11 +86,11 @@ impl IdentityKeyPair {
         }
     }
 
-    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey::deserialize(&self.key.public_key().serialize())?)
     }
 
-    pub fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+    pub fn private_key(&self) -> Result<PrivateKey> {
         Ok(PrivateKey::deserialize(
             &self.key.private_key().serialize(),
         )?)

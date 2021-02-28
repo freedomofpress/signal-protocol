@@ -6,7 +6,7 @@ use futures::executor::block_on;
 use rand::rngs::OsRng;
 
 use crate::address::ProtocolAddress;
-use crate::error::SignalProtocolError;
+use crate::error::Result;
 use crate::protocol::{CiphertextMessage, PreKeySignalMessage, SignalMessage};
 use crate::storage::InMemSignalProtocolStore;
 
@@ -15,7 +15,7 @@ pub fn message_encrypt(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
     msg: &[u8],
-) -> Result<CiphertextMessage, SignalProtocolError> {
+) -> Result<CiphertextMessage> {
     let ciphertext = block_on(libsignal_protocol_rust::message_encrypt(
         msg,
         &remote_address.state,
@@ -32,7 +32,7 @@ pub fn message_decrypt(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
     msg: &CiphertextMessage,
-) -> Result<PyObject, SignalProtocolError> {
+) -> Result<PyObject> {
     let mut csprng = OsRng;
     let plaintext = block_on(libsignal_protocol_rust::message_decrypt(
         &msg.data,
@@ -53,7 +53,7 @@ pub fn message_decrypt_prekey(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
     msg: &PreKeySignalMessage,
-) -> Result<PyObject, SignalProtocolError> {
+) -> Result<PyObject> {
     let mut csprng = OsRng;
     let plaintext = block_on(libsignal_protocol_rust::message_decrypt_prekey(
         &msg.data,
@@ -74,7 +74,7 @@ pub fn message_decrypt_signal(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
     msg: &SignalMessage,
-) -> Result<PyObject, SignalProtocolError> {
+) -> Result<PyObject> {
     let mut csprng = OsRng;
     let plaintext = block_on(libsignal_protocol_rust::message_decrypt_signal(
         &msg.data,
@@ -91,7 +91,7 @@ pub fn message_decrypt_signal(
 pub fn remote_registration_id(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
-) -> Result<u32, SignalProtocolError> {
+) -> Result<u32> {
     Ok(block_on(libsignal_protocol_rust::remote_registration_id(
         &remote_address.state,
         &mut protocol_store.store.session_store,
@@ -103,7 +103,7 @@ pub fn remote_registration_id(
 pub fn session_version(
     protocol_store: &mut InMemSignalProtocolStore,
     remote_address: &ProtocolAddress,
-) -> Result<u32, SignalProtocolError> {
+) -> Result<u32> {
     Ok(block_on(libsignal_protocol_rust::session_version(
         &remote_address.state,
         &mut protocol_store.store.session_store,

@@ -4,6 +4,8 @@ use pyo3::PyErr;
 
 use std::{convert, fmt};
 
+pub type Result<T> = std::result::Result<T,SignalProtocolError>;
+
 create_exception!(
     error,
     SignalProtocolException,

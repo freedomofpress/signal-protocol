@@ -5,7 +5,7 @@ use futures::executor::block_on;
 use rand::rngs::OsRng;
 
 use crate::address::ProtocolAddress;
-use crate::error::SignalProtocolError;
+use crate::error::Result;
 use crate::protocol::PreKeySignalMessage;
 use crate::state::{PreKeyBundle, PreKeyId, SessionRecord};
 use crate::storage::InMemSignalProtocolStore;
@@ -16,7 +16,7 @@ pub fn process_prekey(
     remote_address: &ProtocolAddress,
     session_record: &mut SessionRecord,
     protocol_store: &mut InMemSignalProtocolStore,
-) -> Result<Option<PreKeyId>, SignalProtocolError> {
+) -> Result<Option<PreKeyId>> {
     let result = block_on(libsignal_protocol_rust::process_prekey(
         &message.data,
         &remote_address.state,
@@ -34,7 +34,7 @@ pub fn process_prekey_bundle(
     remote_address: ProtocolAddress,
     protocol_store: &mut InMemSignalProtocolStore,
     bundle: PreKeyBundle,
-) -> Result<(), SignalProtocolError> {
+) -> Result<()> {
     let mut csprng = OsRng;
     block_on(libsignal_protocol_rust::process_prekey_bundle(
         &remote_address.state,

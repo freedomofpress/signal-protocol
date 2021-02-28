@@ -5,7 +5,7 @@ use pyo3::wrap_pyfunction;
 use futures::executor::block_on;
 use rand::rngs::OsRng;
 
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 use crate::protocol::{CiphertextMessage, SenderKeyDistributionMessage};
 use crate::sender_keys::SenderKeyName;
 use crate::storage::InMemSignalProtocolStore;
@@ -16,7 +16,7 @@ pub fn group_encrypt(
     protocol_store: &mut InMemSignalProtocolStore,
     sender_key_id: &SenderKeyName,
     plaintext: &[u8],
-) -> Result<PyObject, SignalProtocolError> {
+) -> Result<PyObject> {
     let mut csprng = OsRng;
     let ciphertext = block_on(libsignal_protocol_rust::group_encrypt(
         &mut protocol_store.store.sender_key_store,
@@ -34,7 +34,7 @@ pub fn group_decrypt(
     skm_bytes: &[u8],
     protocol_store: &mut InMemSignalProtocolStore,
     sender_key_id: &SenderKeyName,
-) -> Result<PyObject, SignalProtocolError> {
+) -> Result<PyObject> {
     let plaintext = block_on(libsignal_protocol_rust::group_decrypt(
         skm_bytes,
         &mut protocol_store.store.sender_key_store,
@@ -49,7 +49,7 @@ pub fn process_sender_key_distribution_message(
     sender_key_name: &SenderKeyName,
     skdm: &SenderKeyDistributionMessage,
     protocol_store: &mut InMemSignalProtocolStore,
-) -> Result<(), SignalProtocolError> {
+) -> Result<()> {
     Ok(block_on(
         libsignal_protocol_rust::process_sender_key_distribution_message(
             &sender_key_name.state,

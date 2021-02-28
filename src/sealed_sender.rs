@@ -1,6 +1,6 @@
 use crate::address::ProtocolAddress;
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 use crate::storage::InMemSignalProtocolStore;
 
 use futures::executor::block_on;
@@ -19,7 +19,7 @@ pub struct ServerCertificate {
 #[pymethods]
 impl ServerCertificate {
     #[staticmethod]
-    fn deserialize(data: &[u8]) -> Result<Self, SignalProtocolError> {
+    fn deserialize(data: &[u8]) -> Result<Self> {
         Ok(ServerCertificate {
             data: libsignal_protocol_rust::ServerCertificate::deserialize(data)?,
         })
@@ -39,29 +39,29 @@ impl ServerCertificate {
         }
     }
 
-    fn validate(&self, trust_root: &PublicKey) -> Result<bool, SignalProtocolError> {
+    fn validate(&self, trust_root: &PublicKey) -> Result<bool> {
         Ok(self.data.validate(&trust_root.key)?)
     }
 
-    fn key_id(&self) -> Result<u32, SignalProtocolError> {
+    fn key_id(&self) -> Result<u32> {
         Ok(self.data.key_id()?)
     }
 
-    fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey::new(self.data.public_key()?))
     }
 
-    fn certificate(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn certificate(&self, py: Python) -> Result<PyObject> {
         let result = self.data.certificate()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn signature(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn signature(&self, py: Python) -> Result<PyObject> {
         let result = self.data.signature()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn serialized(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialized(&self, py: Python) -> Result<PyObject> {
         let result = self.data.serialized()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -76,7 +76,7 @@ pub struct SenderCertificate {
 #[pymethods]
 impl SenderCertificate {
     #[staticmethod]
-    fn deserialize(data: &[u8]) -> Result<Self, SignalProtocolError> {
+    fn deserialize(data: &[u8]) -> Result<Self> {
         Ok(SenderCertificate {
             data: libsignal_protocol_rust::SenderCertificate::deserialize(data)?,
         })
@@ -112,47 +112,47 @@ impl SenderCertificate {
         &self,
         trust_root: &PublicKey,
         validation_time: u64,
-    ) -> Result<bool, SignalProtocolError> {
+    ) -> Result<bool> {
         Ok(self.data.validate(&trust_root.key, validation_time)?)
     }
 
-    fn signer(&self) -> Result<ServerCertificate, SignalProtocolError> {
+    fn signer(&self) -> Result<ServerCertificate> {
         Ok(ServerCertificate {
             data: (self.data.signer()?).clone(),
         })
     }
 
-    fn key(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn key(&self) -> Result<PublicKey> {
         Ok(PublicKey::new(self.data.key()?))
     }
 
-    fn sender_device_id(&self) -> Result<u32, SignalProtocolError> {
+    fn sender_device_id(&self) -> Result<u32> {
         Ok(self.data.sender_device_id()?)
     }
 
-    fn sender_uuid(&self) -> Result<Option<&str>, SignalProtocolError> {
+    fn sender_uuid(&self) -> Result<Option<&str>> {
         Ok(self.data.sender_uuid()?)
     }
 
-    fn sender_e164(&self) -> Result<Option<&str>, SignalProtocolError> {
+    fn sender_e164(&self) -> Result<Option<&str>> {
         Ok(self.data.sender_e164()?)
     }
 
-    fn expiration(&self) -> Result<u64, SignalProtocolError> {
+    fn expiration(&self) -> Result<u64> {
         Ok(self.data.expiration()?)
     }
 
-    fn certificate(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn certificate(&self, py: Python) -> Result<PyObject> {
         let result = self.data.certificate()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn signature(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn signature(&self, py: Python) -> Result<PyObject> {
         let result = self.data.signature()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn serialized(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialized(&self, py: Python) -> Result<PyObject> {
         let result = self.data.serialized()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -160,7 +160,7 @@ impl SenderCertificate {
     fn preferred_address(
         &self,
         store: &InMemSignalProtocolStore,
-    ) -> Result<ProtocolAddress, SignalProtocolError> {
+    ) -> Result<ProtocolAddress> {
         Ok(ProtocolAddress {
             state: block_on(
                 self.data
@@ -178,7 +178,7 @@ pub struct UnidentifiedSenderMessageContent {
 #[pymethods]
 impl UnidentifiedSenderMessageContent {
     #[staticmethod]
-    fn deserialize(data: &[u8]) -> Result<Self, SignalProtocolError> {
+    fn deserialize(data: &[u8]) -> Result<Self> {
         Ok(UnidentifiedSenderMessageContent {
             data: libsignal_protocol_rust::UnidentifiedSenderMessageContent::deserialize(data)?,
         })
@@ -208,22 +208,22 @@ impl UnidentifiedSenderMessageContent {
         }
     }
 
-    fn msg_type(&self) -> Result<u8, SignalProtocolError> {
+    fn msg_type(&self) -> Result<u8> {
         Ok(self.data.msg_type()? as u8)
     }
 
-    fn sender(&self) -> Result<SenderCertificate, SignalProtocolError> {
+    fn sender(&self) -> Result<SenderCertificate> {
         Ok(SenderCertificate {
             data: (self.data.sender()?).clone(),
         })
     }
 
-    fn contents(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn contents(&self, py: Python) -> Result<PyObject> {
         let result = self.data.contents()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn serialized(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialized(&self, py: Python) -> Result<PyObject> {
         let result = self.data.serialized()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -237,7 +237,7 @@ pub struct UnidentifiedSenderMessage {
 #[pymethods]
 impl UnidentifiedSenderMessage {
     #[staticmethod]
-    fn deserialize(data: &[u8]) -> Result<Self, SignalProtocolError> {
+    fn deserialize(data: &[u8]) -> Result<Self> {
         Ok(UnidentifiedSenderMessage {
             data: libsignal_protocol_rust::UnidentifiedSenderMessage::deserialize(data)?,
         })
@@ -259,25 +259,25 @@ impl UnidentifiedSenderMessage {
         }
     }
 
-    fn version(&self) -> Result<u8, SignalProtocolError> {
+    fn version(&self) -> Result<u8> {
         Ok(self.data.version()?)
     }
 
-    fn ephemeral_public(&self) -> Result<PublicKey, SignalProtocolError> {
+    fn ephemeral_public(&self) -> Result<PublicKey> {
         Ok(PublicKey::new(self.data.ephemeral_public()?))
     }
 
-    fn encrypted_static(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn encrypted_static(&self, py: Python) -> Result<PyObject> {
         let result = self.data.encrypted_static()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn encrypted_message(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn encrypted_message(&self, py: Python) -> Result<PyObject> {
         let result = self.data.encrypted_message()?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn serialized(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn serialized(&self, py: Python) -> Result<PyObject> {
         let result = self.data.serialized()?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -302,7 +302,7 @@ impl SealedSenderDecryptionResult {
         self.data.device_id
     }
 
-    fn message(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    fn message(&self, py: Python) -> Result<PyObject> {
         Ok(PyBytes::new(py, &self.data.message).into())
     }
 }
@@ -342,7 +342,7 @@ pub fn sealed_sender_encrypt(
     ptext: &[u8],
     protocol_store: &mut InMemSignalProtocolStore,
     py: Python,
-) -> Result<PyObject, SignalProtocolError> {
+) -> Result<PyObject> {
     let mut csprng = OsRng;
     let result = block_on(libsignal_protocol_rust::sealed_sender_encrypt(
         &destination.state,

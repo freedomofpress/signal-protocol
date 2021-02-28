@@ -6,7 +6,7 @@ use pyo3::wrap_pyfunction;
 
 use rand::rngs::OsRng;
 
-use crate::error::SignalProtocolError;
+use crate::error::Result;
 
 #[pyfunction]
 pub fn generate_keypair(py: Python) -> PyResult<(PyObject, PyObject)> {
@@ -40,11 +40,11 @@ impl KeyPair {
         KeyPair { key: keypair }
     }
 
-    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey::deserialize(&self.key.public_key.serialize())?)
     }
 
-    pub fn private_key(&self) -> Result<PrivateKey, SignalProtocolError> {
+    pub fn private_key(&self) -> Result<PrivateKey> {
         Ok(PrivateKey::deserialize(&self.key.private_key.serialize())?)
     }
 
@@ -57,7 +57,7 @@ impl KeyPair {
         &self,
         py: Python,
         message: &[u8],
-    ) -> Result<PyObject, SignalProtocolError> {
+    ) -> Result<PyObject> {
         let mut csprng = OsRng;
         let sig = self.key.calculate_signature(&message, &mut csprng)?;
         Ok(PyBytes::new(py, &sig).into())
@@ -67,7 +67,7 @@ impl KeyPair {
         &self,
         py: Python,
         their_key: &PublicKey,
-    ) -> Result<PyObject, SignalProtocolError> {
+    ) -> Result<PyObject> {
         let agreement = self.key.calculate_agreement(&their_key.key)?;
         Ok(PyBytes::new(py, &agreement).into())
     }
@@ -76,7 +76,7 @@ impl KeyPair {
     pub fn from_public_and_private(
         public_key: &[u8],
         private_key: &[u8],
-    ) -> Result<Self, SignalProtocolError> {
+    ) -> Result<Self> {
         Ok(KeyPair {
             key: libsignal_protocol_rust::KeyPair::from_public_and_private(
                 public_key,
@@ -102,7 +102,7 @@ impl PublicKey {
 #[pymethods]
 impl PublicKey {
     #[staticmethod]
-    pub fn deserialize(key: &[u8]) -> Result<Self, SignalProtocolError> {
+    pub fn deserialize(key: &[u8]) -> Result<Self> {
         Ok(Self {
             key: libsignal_protocol_rust::PublicKey::deserialize(key)?,
         })
@@ -116,7 +116,7 @@ impl PublicKey {
         &self,
         message: &[u8],
         signature: &[u8],
-    ) -> Result<bool, SignalProtocolError> {
+    ) -> Result<bool> {
         Ok(self.key.verify_signature(&message, &signature)?)
     }
 }
@@ -148,7 +148,7 @@ impl PrivateKey {
 #[pymethods]
 impl PrivateKey {
     #[staticmethod]
-    pub fn deserialize(key: &[u8]) -> Result<Self, SignalProtocolError> {
+    pub fn deserialize(key: &[u8]) -> Result<Self> {
         Ok(Self {
             key: libsignal_protocol_rust::PrivateKey::deserialize(key)?,
         })
@@ -162,7 +162,7 @@ impl PrivateKey {
         &self,
         message: &[u8],
         py: Python,
-    ) -> Result<PyObject, SignalProtocolError> {
+    ) -> Result<PyObject> {
         let mut csprng = OsRng;
         let sig = self.key.calculate_signature(message, &mut csprng)?;
         Ok(PyBytes::new(py, &sig).into())
@@ -172,12 +172,12 @@ impl PrivateKey {
         &self,
         py: Python,
         their_key: &PublicKey,
-    ) -> Result<PyObject, SignalProtocolError> {
+    ) -> Result<PyObject> {
         let result = self.key.calculate_agreement(&their_key.key)?;
         Ok(PyBytes::new(py, &result).into())
     }
 
-    pub fn public_key(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn public_key(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: self.key.public_key()?,
         })
@@ -189,7 +189,7 @@ pub fn verify_signature(
     public_key: &PublicKey,
     message: &[u8],
     signature: &[u8],
-) -> Result<bool, SignalProtocolError> {
+) -> Result<bool> {
     Ok(public_key.verify_signature(message, signature)?)
 }
 

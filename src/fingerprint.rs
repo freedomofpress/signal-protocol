@@ -2,7 +2,7 @@ use pyo3::class::basic::PyObjectProtocol;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 use crate::identity_key::IdentityKey;
 
 #[pyclass]
@@ -35,15 +35,15 @@ impl Fingerprint {
         }
     }
 
-    pub fn display_string(&self) -> Result<String, SignalProtocolError> {
+    pub fn display_string(&self) -> Result<String> {
         Ok(self.state.display_string()?)
     }
 
-    pub fn compare(&self, combined: &[u8]) -> Result<bool, SignalProtocolError> {
+    pub fn compare(&self, combined: &[u8]) -> Result<bool> {
         Ok(self.state.scannable.compare(combined)?)
     }
 
-    pub fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn serialize(&self, py: Python) -> Result<PyObject> {
         let fingerprint = self.state.scannable.serialize()?;
         Ok(PyBytes::new(py, &fingerprint).into())
     }
@@ -51,11 +51,11 @@ impl Fingerprint {
 
 #[pyproto]
 impl PyObjectProtocol for Fingerprint {
-    fn __str__(&self) -> Result<String, SignalProtocolError> {
+    fn __str__(&self) -> Result<String> {
         self.display_string()
     }
 
-    fn __repr__(&self) -> Result<String, SignalProtocolError> {
+    fn __repr__(&self) -> Result<String> {
         self.display_string()
     }
 }

@@ -3,7 +3,7 @@ use pyo3::types::PyBytes;
 
 use crate::address::ProtocolAddress;
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::SignalProtocolError;
+use crate::error::{Result,SignalProtocolError};
 
 #[pyclass]
 #[derive(Clone, Debug)]
@@ -21,19 +21,19 @@ impl SenderKeyName {
         }
     }
 
-    pub fn group_id(&self) -> Result<String, SignalProtocolError> {
+    pub fn group_id(&self) -> Result<String> {
         Ok(self.state.group_id()?)
     }
 
-    pub fn sender_name(&self) -> Result<String, SignalProtocolError> {
+    pub fn sender_name(&self) -> Result<String> {
         Ok(self.state.sender_name()?)
     }
 
-    pub fn sender_device_id(&self) -> Result<u32, SignalProtocolError> {
+    pub fn sender_device_id(&self) -> Result<u32> {
         Ok(self.state.sender_device_id()?)
     }
 
-    pub fn sender(&self) -> Result<ProtocolAddress, SignalProtocolError> {
+    pub fn sender(&self) -> Result<ProtocolAddress> {
         Ok(ProtocolAddress {
             state: self.state.sender()?,
         })
@@ -57,21 +57,21 @@ impl SenderMessageKey {
         }
     }
 
-    pub fn iteration(&self) -> Result<u32, SignalProtocolError> {
+    pub fn iteration(&self) -> Result<u32> {
         Ok(self.state.iteration()?)
     }
 
-    pub fn iv(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn iv(&self, py: Python) -> Result<PyObject> {
         let iv = self.state.iv()?;
         Ok(PyBytes::new(py, &iv).into())
     }
 
-    pub fn cipher_key(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn cipher_key(&self, py: Python) -> Result<PyObject> {
         let key = self.state.cipher_key()?;
         Ok(PyBytes::new(py, &key).into())
     }
 
-    pub fn seed(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn seed(&self, py: Python) -> Result<PyObject> {
         let seed = self.state.seed()?;
         Ok(PyBytes::new(py, &seed).into())
     }
@@ -94,22 +94,22 @@ impl SenderChainKey {
         }
     }
 
-    pub fn iteration(&self) -> Result<u32, SignalProtocolError> {
+    pub fn iteration(&self) -> Result<u32> {
         Ok(self.state.iteration()?)
     }
 
-    pub fn seed(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn seed(&self, py: Python) -> Result<PyObject> {
         let seed = self.state.seed()?;
         Ok(PyBytes::new(py, &seed).into())
     }
 
-    pub fn next(&self) -> Result<SenderChainKey, SignalProtocolError> {
+    pub fn next(&self) -> Result<SenderChainKey> {
         Ok(SenderChainKey {
             state: self.state.next()?,
         })
     }
 
-    pub fn sender_message_key(&self) -> Result<SenderMessageKey, SignalProtocolError> {
+    pub fn sender_message_key(&self) -> Result<SenderMessageKey> {
         Ok(SenderMessageKey {
             state: self.state.sender_message_key()?,
         })
@@ -158,16 +158,16 @@ impl SenderKeyState {
         }
     }
 
-    pub fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn serialize(&self, py: Python) -> Result<PyObject> {
         let bytes = self.state.serialize()?;
         Ok(PyBytes::new(py, &bytes).into())
     }
 
-    pub fn sender_key_id(&self) -> Result<u32, SignalProtocolError> {
+    pub fn sender_key_id(&self) -> Result<u32> {
         Ok(self.state.sender_key_id()?)
     }
 
-    pub fn sender_chain_key(&self) -> Result<SenderChainKey, SignalProtocolError> {
+    pub fn sender_chain_key(&self) -> Result<SenderChainKey> {
         Ok(SenderChainKey {
             state: self.state.sender_chain_key()?,
         })
@@ -176,31 +176,31 @@ impl SenderKeyState {
     pub fn set_sender_chain_key(
         &mut self,
         chain_key: SenderChainKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         Ok(self.state.set_sender_chain_key(chain_key.state)?)
     }
 
-    pub fn signing_key_public(&self) -> Result<PublicKey, SignalProtocolError> {
+    pub fn signing_key_public(&self) -> Result<PublicKey> {
         Ok(PublicKey {
             key: self.state.signing_key_public()?,
         })
     }
 
-    pub fn signing_key_private(&self) -> Result<Option<PrivateKey>, SignalProtocolError> {
+    pub fn signing_key_private(&self) -> Result<Option<PrivateKey>> {
         match self.state.signing_key_private()? {
             Some(key) => Ok(Some(PrivateKey { key })),
             None => Ok(None),
         }
     }
 
-    pub fn has_sender_message_key(&self, iteration: u32) -> Result<bool, SignalProtocolError> {
+    pub fn has_sender_message_key(&self, iteration: u32) -> Result<bool> {
         Ok(self.state.has_sender_message_key(iteration)?)
     }
 
     pub fn add_sender_message_key(
         &mut self,
         sender_message_key: &SenderMessageKey,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         Ok(self
             .state
             .add_sender_message_key(&sender_message_key.state)?)
@@ -209,7 +209,7 @@ impl SenderKeyState {
     pub fn remove_sender_message_key(
         &mut self,
         iteration: u32,
-    ) -> Result<Option<SenderMessageKey>, SignalProtocolError> {
+    ) -> Result<Option<SenderMessageKey>> {
         match self.state.remove_sender_message_key(iteration)? {
             Some(state) => Ok(Some(SenderMessageKey { state })),
             None => Ok(None),
@@ -241,11 +241,11 @@ impl SenderKeyRecord {
         }
     }
 
-    pub fn is_empty(&self) -> Result<bool, SignalProtocolError> {
+    pub fn is_empty(&self) -> Result<bool> {
         Ok(self.state.is_empty()?)
     }
 
-    pub fn sender_key_state(&mut self) -> Result<SenderKeyState, SignalProtocolError> {
+    pub fn sender_key_state(&mut self) -> Result<SenderKeyState> {
         Ok(SenderKeyState {
             state: self.state.sender_key_state()?.clone(),
         })
@@ -254,7 +254,7 @@ impl SenderKeyRecord {
     pub fn sender_key_state_for_keyid(
         &mut self,
         key_id: u32,
-    ) -> Result<SenderKeyState, SignalProtocolError> {
+    ) -> Result<SenderKeyState> {
         Ok(SenderKeyState {
             state: self.state.sender_key_state_for_keyid(key_id)?.clone(),
         })
@@ -267,7 +267,7 @@ impl SenderKeyRecord {
         chain_key: &[u8],
         signature_key: PublicKey,
         signature_private_key: Option<PrivateKey>,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         let sig_private_key = match signature_private_key {
             Some(key) => Some(key.key),
             None => None,
@@ -288,7 +288,7 @@ impl SenderKeyRecord {
         chain_key: &[u8],
         signature_key: PublicKey,
         signature_private_key: Option<PrivateKey>,
-    ) -> Result<(), SignalProtocolError> {
+    ) -> Result<()> {
         let sig_private_key = match signature_private_key {
             Some(key) => Some(key.key),
             None => None,
@@ -302,7 +302,7 @@ impl SenderKeyRecord {
         )?)
     }
 
-    pub fn serialize(&self, py: Python) -> Result<PyObject, SignalProtocolError> {
+    pub fn serialize(&self, py: Python) -> Result<PyObject> {
         let bytes = self.state.serialize()?;
         Ok(PyBytes::new(py, &bytes).into())
     }
