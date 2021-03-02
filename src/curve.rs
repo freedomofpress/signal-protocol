@@ -53,30 +53,19 @@ impl KeyPair {
         PyBytes::new(py, &result).into()
     }
 
-    pub fn calculate_signature(
-        &self,
-        py: Python,
-        message: &[u8],
-    ) -> Result<PyObject> {
+    pub fn calculate_signature(&self, py: Python, message: &[u8]) -> Result<PyObject> {
         let mut csprng = OsRng;
         let sig = self.key.calculate_signature(&message, &mut csprng)?;
         Ok(PyBytes::new(py, &sig).into())
     }
 
-    pub fn calculate_agreement(
-        &self,
-        py: Python,
-        their_key: &PublicKey,
-    ) -> Result<PyObject> {
+    pub fn calculate_agreement(&self, py: Python, their_key: &PublicKey) -> Result<PyObject> {
         let agreement = self.key.calculate_agreement(&their_key.key)?;
         Ok(PyBytes::new(py, &agreement).into())
     }
 
     #[staticmethod]
-    pub fn from_public_and_private(
-        public_key: &[u8],
-        private_key: &[u8],
-    ) -> Result<Self> {
+    pub fn from_public_and_private(public_key: &[u8], private_key: &[u8]) -> Result<Self> {
         Ok(KeyPair {
             key: libsignal_protocol_rust::KeyPair::from_public_and_private(
                 public_key,
@@ -112,11 +101,7 @@ impl PublicKey {
         PyBytes::new(py, &self.key.serialize()).into()
     }
 
-    pub fn verify_signature(
-        &self,
-        message: &[u8],
-        signature: &[u8],
-    ) -> Result<bool> {
+    pub fn verify_signature(&self, message: &[u8], signature: &[u8]) -> Result<bool> {
         Ok(self.key.verify_signature(&message, &signature)?)
     }
 }
@@ -158,21 +143,13 @@ impl PrivateKey {
         PyBytes::new(py, &self.key.serialize()).into()
     }
 
-    pub fn calculate_signature(
-        &self,
-        message: &[u8],
-        py: Python,
-    ) -> Result<PyObject> {
+    pub fn calculate_signature(&self, message: &[u8], py: Python) -> Result<PyObject> {
         let mut csprng = OsRng;
         let sig = self.key.calculate_signature(message, &mut csprng)?;
         Ok(PyBytes::new(py, &sig).into())
     }
 
-    pub fn calculate_agreement(
-        &self,
-        py: Python,
-        their_key: &PublicKey,
-    ) -> Result<PyObject> {
+    pub fn calculate_agreement(&self, py: Python, their_key: &PublicKey) -> Result<PyObject> {
         let result = self.key.calculate_agreement(&their_key.key)?;
         Ok(PyBytes::new(py, &result).into())
     }
@@ -185,11 +162,7 @@ impl PrivateKey {
 }
 
 #[pyfunction]
-pub fn verify_signature(
-    public_key: &PublicKey,
-    message: &[u8],
-    signature: &[u8],
-) -> Result<bool> {
+pub fn verify_signature(public_key: &PublicKey, message: &[u8], signature: &[u8]) -> Result<bool> {
     Ok(public_key.verify_signature(message, signature)?)
 }
 

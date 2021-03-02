@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="signal-protocol",
-    version="0.2.1",
+    version="0.2.2",
     classifiers=[
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         "Development Status :: 3 - Alpha",

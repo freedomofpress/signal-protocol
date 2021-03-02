@@ -6,7 +6,7 @@ use pyo3::types::PyBytes;
 use rand::rngs::OsRng;
 
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::{Result,SignalProtocolError};
+use crate::error::{Result, SignalProtocolError};
 use crate::identity_key::IdentityKey;
 
 /// CiphertextMessage is a Rust enum in the upstream crate. Mapping of enums to Python enums

@@ -76,7 +76,7 @@ def test_basic_prekey_v3():
     )
 
     assert alice_store.load_session(bob_address)
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
 
     original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
@@ -115,8 +115,8 @@ def test_basic_prekey_v3():
     assert bob_store.load_session(alice_address)
 
     bobs_session_with_alice = bob_store.load_session(alice_address)
-    assert bobs_session_with_alice.session_state().session_version() == 3
-    assert len(bobs_session_with_alice.session_state().alice_base_key()) == 32 + 1
+    assert bobs_session_with_alice.session_version() == 3
+    assert len(bobs_session_with_alice.alice_base_key()) == 32 + 1
 
     bob_outgoing = session_cipher.message_encrypt(
         bob_store, alice_address, bobs_response
@@ -333,7 +333,7 @@ def test_repeat_bundle_message_v3():
     )
 
     assert alice_store.load_session(bob_address)
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
 
     original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
@@ -451,7 +451,7 @@ def test_bad_message_bundle():
     bob_store.save_signed_pre_key(signed_pre_key_id, signed_prekey)
 
     assert alice_store.load_session(bob_address)
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
 
     original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
@@ -535,7 +535,7 @@ def test_optional_one_time_prekey():
         bob_pre_key_bundle,
     )
 
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
 
     original_message = b"Hobgoblins hold themselves to high standards of military honor"
 
@@ -667,8 +667,8 @@ def test_basic_simultaneous_initiate():
     )
     assert bob_plaintext == b"hi bob"
 
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
-    assert bob_store.load_session(alice_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
+    assert bob_store.load_session(alice_address).session_version() == 3
 
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
@@ -749,8 +749,8 @@ def test_simultaneous_initiate_with_lossage():
     )
     assert bob_plaintext == b"hi bob"
 
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
-    assert bob_store.load_session(alice_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
+    assert bob_store.load_session(alice_address).session_version() == 3
 
     alice_response = session_cipher.message_encrypt(
         alice_store, bob_address, b"nice to see you"
@@ -836,8 +836,8 @@ def test_simultaneous_initiate_lost_message():
     )
     assert bob_plaintext == b"hi bob"
 
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
-    assert bob_store.load_session(alice_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
+    assert bob_store.load_session(alice_address).session_version() == 3
 
     assert not is_session_id_equal(alice_store, alice_address, bob_store, bob_address)
 
@@ -922,12 +922,8 @@ def test_simultaneous_initiate_repeated_messages():
         )
         assert bob_plaintext == b"hi bob"
 
-        assert (
-            alice_store.load_session(bob_address).session_state().session_version() == 3
-        )
-        assert (
-            bob_store.load_session(alice_address).session_state().session_version() == 3
-        )
+        assert alice_store.load_session(bob_address).session_version() == 3
+        assert bob_store.load_session(alice_address).session_version() == 3
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -966,12 +962,8 @@ def test_simultaneous_initiate_repeated_messages():
         )
         assert bob_plaintext == b"hi bob"
 
-        assert (
-            alice_store.load_session(bob_address).session_state().session_version() == 3
-        )
-        assert (
-            bob_store.load_session(alice_address).session_state().session_version() == 3
-        )
+        assert alice_store.load_session(bob_address).session_version() == 3
+        assert bob_store.load_session(alice_address).session_version() == 3
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -1071,12 +1063,8 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         )
         assert bob_plaintext == b"hi bob"
 
-        assert (
-            alice_store.load_session(bob_address).session_state().session_version() == 3
-        )
-        assert (
-            bob_store.load_session(alice_address).session_state().session_version() == 3
-        )
+        assert alice_store.load_session(bob_address).session_version() == 3
+        assert bob_store.load_session(alice_address).session_version() == 3
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -1115,12 +1103,8 @@ def test_simultaneous_initiate_lost_message_repeated_messages():
         )
         assert bob_plaintext == b"hi bob"
 
-        assert (
-            alice_store.load_session(bob_address).session_state().session_version() == 3
-        )
-        assert (
-            bob_store.load_session(alice_address).session_state().session_version() == 3
-        )
+        assert alice_store.load_session(bob_address).session_version() == 3
+        assert bob_store.load_session(alice_address).session_version() == 3
 
         assert not is_session_id_equal(
             alice_store, alice_address, bob_store, bob_address
@@ -1222,7 +1206,7 @@ def test_basic_large_message():
     )
 
     assert alice_store.load_session(bob_address)
-    assert alice_store.load_session(bob_address).session_state().session_version() == 3
+    assert alice_store.load_session(bob_address).session_version() == 3
 
     original_message = bytes(1024 * 1000)  # 1 MB empty attachment
 

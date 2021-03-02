@@ -1,5 +1,6 @@
 import pytest
 
+from signal_protocol.state import SessionRecord
 from signal_protocol.curve import KeyPair, PrivateKey, PublicKey
 from signal_protocol.identity_key import IdentityKey, IdentityKeyPair
 from signal_protocol.ratchet import (
@@ -31,7 +32,7 @@ def test_ratcheting_session_as_bob():
         "05472d1fb1a9862c3af6beaca8920277e2b26f4a79213ec7c906aeb35e03cf8950"
     )
 
-    alice_identity_public = bytes.fromhex(
+    alice_identity_public_bytes = bytes.fromhex(
         "05b4a8455660ada65b401007f615e654041746432e3339c6875149bceefcb42b4a"
     )
 
@@ -65,7 +66,7 @@ def test_ratcheting_session_as_bob():
 
     alice_base_public_key = PublicKey.deserialize(alice_base_public)
 
-    alice_identity_public = IdentityKey(alice_identity_public)
+    alice_identity_public = IdentityKey(alice_identity_public_bytes)
 
     bob_parameters = BobSignalProtocolParameters(
         bob_identity_key_pair,
@@ -76,16 +77,12 @@ def test_ratcheting_session_as_bob():
         alice_base_public_key,
     )
 
-    bob_session = initialize_bob_session(bob_parameters)
+    bob_record = initialize_bob_session(bob_parameters)
 
-    assert (
-        bob_session.session_state().local_identity_key()
-        == bob_identity_key_pair.identity_key()
-    )
-    assert bob_session.session_state().remote_identity_key() == alice_identity_public
-    assert (
-        bob_session.session_state().get_sender_chain_key().key().hex()
-        == expected_sender_chain
+    assert bob_record.local_identity_key_bytes() == bob_identity_public
+    assert bob_record.remote_identity_key_bytes() == alice_identity_public_bytes
+    assert bob_record.get_sender_chain_key_bytes() == bytes.fromhex(
+        expected_sender_chain
     )
 
 
@@ -94,7 +91,7 @@ def test_ratcheting_session_as_alice():
         "052cb49776b8770205745a3a6e24f579cdb4ba7a89041005928ebbadc9c05ad458"
     )
 
-    bob_identity_public = bytes.fromhex(
+    bob_identity_public_bytes = bytes.fromhex(
         "05f1f43874f6966956c2dd473f8fa15adeb71d1cb991b2341692324cefb1c5e626"
     )
 
@@ -135,7 +132,7 @@ def test_ratcheting_session_as_alice():
         alice_identity_key_public, alice_identity_key_private
     )
 
-    bob_identity_public = IdentityKey(bob_identity_public)
+    bob_identity_public = IdentityKey(bob_identity_public_bytes)
 
     alice_base_key = KeyPair.from_public_and_private(
         alice_base_public, alice_base_private
@@ -150,17 +147,10 @@ def test_ratcheting_session_as_alice():
         bob_ephemeral_public,
     )
 
-    alice_session = initialize_alice_session(alice_parameters)
+    alice_record = initialize_alice_session(alice_parameters)
 
-    assert (
-        alice_session.session_state().local_identity_key()
-        == alice_identity_key_pair.identity_key()
-    )
-    assert alice_session.session_state().remote_identity_key() == bob_identity_public
-    assert (
-        alice_session.session_state()
-        .get_receiver_chain_key(bob_ephemeral_public)
-        .key()
-        .hex()
-        == expected_receiver_chain
+    assert alice_record.local_identity_key_bytes() == alice_identity_public
+    assert alice_record.remote_identity_key_bytes() == bob_identity_public_bytes
+    assert alice_record.get_receiver_chain_key(bob_ephemeral_public) == bytes.fromhex(
+        expected_receiver_chain
     )

@@ -222,8 +222,8 @@ def run_session_interaction(alice_session, bob_session):
 
 def is_session_id_equal(alice_store, alice_address, bob_store, bob_address) -> bool:
     return (
-        alice_store.load_session(bob_address).session_state().alice_base_key()
-        == bob_store.load_session(alice_address).session_state().alice_base_key()
+        alice_store.load_session(bob_address).alice_base_key()
+        == bob_store.load_session(alice_address).alice_base_key()
     )
 
 

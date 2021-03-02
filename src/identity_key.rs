@@ -9,7 +9,7 @@ use pyo3::PyObjectProtocol;
 use rand::rngs::OsRng;
 
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::{Result,SignalProtocolError};
+use crate::error::{Result, SignalProtocolError};
 
 #[pyclass]
 #[derive(Debug, Clone, Copy)]

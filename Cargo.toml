@@ -1,13 +1,13 @@
 [package]
 name = "signal-protocol"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["jen <jen@freedom.press>"]
 edition = "2018"
 license = "AGPL-3.0-only"
 
 [dependencies]
 rand = "0.7.3"
-libsignal-protocol-rust = { git = "https://github.com/freedomofpress/libsignal-client", rev="ee609fe14c17667dcc040169a1fe4dad94e6cd5b" }
+libsignal-protocol-rust = { git = "https://github.com/freedomofpress/libsignal-client", rev="609a1de73380a2b9d314db625e6b2f0368e838ec" }
 pyo3 = { version = "0.12.4", features = ["extension-module"] }
 futures = "0.3.7"
 

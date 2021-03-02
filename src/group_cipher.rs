@@ -5,7 +5,7 @@ use pyo3::wrap_pyfunction;
 use futures::executor::block_on;
 use rand::rngs::OsRng;
 
-use crate::error::{Result,SignalProtocolError};
+use crate::error::{Result, SignalProtocolError};
 use crate::protocol::{CiphertextMessage, SenderKeyDistributionMessage};
 use crate::sender_keys::SenderKeyName;
 use crate::storage::InMemSignalProtocolStore;

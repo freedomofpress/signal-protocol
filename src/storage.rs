@@ -2,7 +2,7 @@ use futures::executor::block_on;
 use pyo3::prelude::*;
 
 use crate::address::ProtocolAddress;
-use crate::error::{Result,SignalProtocolError};
+use crate::error::{Result, SignalProtocolError};
 use crate::identity_key::{IdentityKey, IdentityKeyPair};
 use crate::sender_keys::{SenderKeyName, SenderKeyRecord};
 use crate::state::{PreKeyId, PreKeyRecord, SessionRecord, SignedPreKeyId, SignedPreKeyRecord};
@@ -45,11 +45,7 @@ impl InMemSignalProtocolStore {
         )?)
     }
 
-    fn save_identity(
-        &mut self,
-        address: &ProtocolAddress,
-        identity: &IdentityKey,
-    ) -> Result<bool> {
+    fn save_identity(&mut self, address: &ProtocolAddress, identity: &IdentityKey) -> Result<bool> {
         Ok(block_on(self.store.identity_store.save_identity(
             &address.state,
             &identity.key,
@@ -57,10 +53,7 @@ impl InMemSignalProtocolStore {
         ))?)
     }
 
-    fn get_identity(
-        &self,
-        address: &ProtocolAddress,
-    ) -> Result<Option<IdentityKey>> {
+    fn get_identity(&self, address: &ProtocolAddress) -> Result<Option<IdentityKey>> {
         let key = block_on(self.store.identity_store.get_identity(&address.state, None))?;
 
         match key {
@@ -73,10 +66,7 @@ impl InMemSignalProtocolStore {
 /// libsignal_protocol_rust::SessionStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    pub fn load_session(
-        &self,
-        address: &ProtocolAddress,
-    ) -> Result<Option<SessionRecord>> {
+    pub fn load_session(&self, address: &ProtocolAddress) -> Result<Option<SessionRecord>> {
         let session = block_on(self.store.load_session(&address.state, None))?;
 
         match session {
@@ -85,11 +75,7 @@ impl InMemSignalProtocolStore {
         }
     }
 
-    fn store_session(
-        &mut self,
-        address: &ProtocolAddress,
-        record: &SessionRecord,
-    ) -> Result<()> {
+    fn store_session(&mut self, address: &ProtocolAddress, record: &SessionRecord) -> Result<()> {
         block_on(
             self.store
                 .store_session(&address.state, &record.state, None),
@@ -106,11 +92,7 @@ impl InMemSignalProtocolStore {
         Ok(PreKeyRecord { state })
     }
 
-    fn save_pre_key(
-        &mut self,
-        id: PreKeyId,
-        record: &PreKeyRecord,
-    ) -> Result<()> {
+    fn save_pre_key(&mut self, id: PreKeyId, record: &PreKeyRecord) -> Result<()> {
         block_on(
             self.store
                 .pre_key_store
@@ -128,10 +110,7 @@ impl InMemSignalProtocolStore {
 /// libsignal_protocol_rust::SignedPreKeyStore
 #[pymethods]
 impl InMemSignalProtocolStore {
-    fn get_signed_pre_key(
-        &self,
-        id: SignedPreKeyId,
-    ) -> Result<SignedPreKeyRecord> {
+    fn get_signed_pre_key(&self, id: SignedPreKeyId) -> Result<SignedPreKeyRecord> {
         let state = block_on(self.store.get_signed_pre_key(id, None))?;
         Ok(SignedPreKeyRecord { state })
     }

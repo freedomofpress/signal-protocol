@@ -4,7 +4,7 @@ use pyo3::PyErr;
 
 use std::{convert, fmt};
 
-pub type Result<T> = std::result::Result<T,SignalProtocolError>;
+pub type Result<T> = std::result::Result<T, SignalProtocolError>;
 
 create_exception!(
     error,
@@ -13,6 +13,7 @@ create_exception!(
 );
 
 #[pyclass]
+#[derive(Debug)]
 pub struct SignalProtocolError {
     pub err: libsignal_protocol_rust::SignalProtocolError,
 }

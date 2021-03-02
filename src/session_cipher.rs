@@ -87,36 +87,10 @@ pub fn message_decrypt_signal(
     Ok(PyBytes::new(py, &plaintext).into())
 }
 
-#[pyfunction]
-pub fn remote_registration_id(
-    protocol_store: &mut InMemSignalProtocolStore,
-    remote_address: &ProtocolAddress,
-) -> Result<u32> {
-    Ok(block_on(libsignal_protocol_rust::remote_registration_id(
-        &remote_address.state,
-        &mut protocol_store.store.session_store,
-        None,
-    ))?)
-}
-
-#[pyfunction]
-pub fn session_version(
-    protocol_store: &mut InMemSignalProtocolStore,
-    remote_address: &ProtocolAddress,
-) -> Result<u32> {
-    Ok(block_on(libsignal_protocol_rust::session_version(
-        &remote_address.state,
-        &mut protocol_store.store.session_store,
-        None,
-    ))?)
-}
-
 pub fn init_submodule(module: &PyModule) -> PyResult<()> {
     module.add_wrapped(wrap_pyfunction!(message_encrypt))?;
     module.add_wrapped(wrap_pyfunction!(message_decrypt))?;
     module.add_wrapped(wrap_pyfunction!(message_decrypt_prekey))?;
     module.add_wrapped(wrap_pyfunction!(message_decrypt_signal))?;
-    module.add_wrapped(wrap_pyfunction!(remote_registration_id))?;
-    module.add_wrapped(wrap_pyfunction!(session_version))?;
     Ok(())
 }

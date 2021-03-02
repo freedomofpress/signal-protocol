@@ -1,6 +1,6 @@
 use crate::address::ProtocolAddress;
 use crate::curve::{PrivateKey, PublicKey};
-use crate::error::{Result,SignalProtocolError};
+use crate::error::{Result, SignalProtocolError};
 use crate::storage::InMemSignalProtocolStore;
 
 use futures::executor::block_on;
@@ -108,11 +108,7 @@ impl SenderCertificate {
         }
     }
 
-    fn validate(
-        &self,
-        trust_root: &PublicKey,
-        validation_time: u64,
-    ) -> Result<bool> {
+    fn validate(&self, trust_root: &PublicKey, validation_time: u64) -> Result<bool> {
         Ok(self.data.validate(&trust_root.key, validation_time)?)
     }
 
@@ -157,10 +153,7 @@ impl SenderCertificate {
         Ok(PyBytes::new(py, &result).into())
     }
 
-    fn preferred_address(
-        &self,
-        store: &InMemSignalProtocolStore,
-    ) -> Result<ProtocolAddress> {
+    fn preferred_address(&self, store: &InMemSignalProtocolStore) -> Result<ProtocolAddress> {
         Ok(ProtocolAddress {
             state: block_on(
                 self.data
